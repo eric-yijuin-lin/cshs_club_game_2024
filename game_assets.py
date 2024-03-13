@@ -1,12 +1,12 @@
 from pygame.image import load
 
 card_images = [
-    load("img/stone_card_1.png"),
-    load("img/water_card_1.png"),
-    load("img/wood_card_1.png"),
-    load("img/food_card_1.png"),
-    load("img/metal_card_1.png"),
-    load("img/jewel_card_1.png"),
+    load("img/stone_1.png"),
+    load("img/water_1.png"),
+    load("img/wood_1.png"),
+    load("img/food_1.png"),
+    load("img/metal_1.png"),
+    load("img/jewel_1.png"),
 ]
 
 icon_images = [

@@ -1,6 +1,15 @@
+from enum import Enum
 from random import randint, uniform
 from pygame import Rect
-from game_data import ResourceType
+
+class ResourceType(Enum):
+    Nothing = 0
+    Stone = 1
+    Water = 2
+    Wood = 3
+    Food = 4
+    Metal = 5
+    Jewel = 6
 
 MINE_MAP_ROW_SIZE = 5
 MINE_MAP_COLUMN_SIZE = 6

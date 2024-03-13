@@ -1,14 +1,5 @@
 from enum import Enum
-from mine_game import MineMapCell
-
-class ResourceType(Enum):
-    Nothing = 0
-    Stone = 1
-    Water = 2
-    Wood = 3
-    Food = 4
-    Metal = 5
-    Jewel = 6
+from mine_game import MineMapCell, ResourceType
 
 class UserResource:
     def __init__(self):
@@ -16,9 +7,9 @@ class UserResource:
         self.recoures = [0] * 6
 
     def add_resource_by_cell(self, cell: MineMapCell) -> None:
-        if cell is None or cell.recource_type == ResourceType.Nothing:
+        if cell is None or cell.resource_type == ResourceType.Nothing:
           return
-        idx = cell.recource_type.value - 1
+        idx = cell.resource_type.value - 1
         self.recoures[idx] += 1
 
     def get_amount(self, resource_type: ResourceType) -> int:

@@ -37,21 +37,21 @@ def draw_mine_map(mine_map: list) -> None:
 def reveal_mine_cell(position: tuple) -> MineMapCell:
     for cell in mine_game.mine_map:
         if cell.rect.collidepoint(position):
-            cell.revealed = True
+            cell.is_revealed = True
             print(cell.rect)
-            print(cell.recource_type)
+            print(cell.resource_type)
             print(cell.recource_level)
             return cell
     return None
 
 def draw_card(mine_cell: MineMapCell):
-    if mine_cell is None or mine_cell.recource_type == ResourceType.Nothing:
+    if mine_cell is None or mine_cell.resource_type == ResourceType.Nothing:
         return
-    idx = mine_cell.recource_type.value - 1
+    idx = mine_cell.resource_type.value - 1
     img = card_images[idx]
     canvas.blit(img, (80, 80))
     pygame.display.update()
-    time.sleep(2)
+    time.sleep(0.5)
 
 def init_game():
     pass
