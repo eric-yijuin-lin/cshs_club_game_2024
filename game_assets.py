@@ -19,6 +19,6 @@ icon_images = [
 ]
 
 tile_images = [
-  load("img/mud_tile_revealed.png"),
-  load("img/mud_tile.png"),
+    load("img/mud_tile_revealed.png"),
+    load("img/mud_tile.png"),
 ]
