@@ -24,3 +24,9 @@ tile_images = [
 ]
 
 pickaxe_image = load("img/pickaxe.png")
+
+button_images = [
+    load("img/mining_button.png"),
+    load("img/synthesize_button.png"),
+    load("img/ranking_button.png"),
+]
