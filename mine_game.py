@@ -15,8 +15,9 @@ MINE_MAP_ROW_SIZE = 5
 MINE_MAP_COLUMN_SIZE = 6
 MINE_TILE_WIDTH = 50
 MINE_TILE_HEIGHT = 50
+MAX_PICKAXE_COUNT = MINE_MAP_ROW_SIZE * MINE_MAP_COLUMN_SIZE // 2
 
-RESOURCE_CELL_RATE = 0.5
+RESOURCE_CELL_RATE = 0.6
 RESOURCE_LEVEL_RANGE = (0.9, 0.7, 0)
 
 class MineMapCell:
@@ -56,6 +57,7 @@ class MineMapCell:
 
 class MineGameManager:
     def __init__(self) -> None:
+        self.pickaxe_count = MAX_PICKAXE_COUNT
         self.mine_map = self.new_mine_map()
 
     def new_mine_map(self) -> list:

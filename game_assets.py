@@ -22,3 +22,5 @@ tile_images = [
     load("img/mud_tile_revealed.png"),
     load("img/mud_tile.png"),
 ]
+
+pickaxe_image = load("img/pickaxe.png")
