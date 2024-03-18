@@ -30,3 +30,7 @@ button_images = [
     load("img/synthesize_button.png"),
     load("img/ranking_button.png"),
 ]
+
+sythesize_images = [
+    load("img/material_empty.png"),
+]

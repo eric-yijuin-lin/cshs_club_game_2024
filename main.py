@@ -1,18 +1,28 @@
 import time
 import pygame
+from pygame import Rect
 from mine_game import MineGameManager, MineMapCell, ResourceType
+from synthesize import SynthesizeManager
 from game_assets import *
 from game_data import UserResource
+from sprite import GameSprite
 
-clock = pygame.time.Clock()
-fps = 40
 
 
 pygame.init()
 main_scene = pygame.display.set_mode((420, 500))
 font = pygame.font.SysFont('arial', 16)
+clock = pygame.time.Clock()
+
 user_resource = UserResource()
 mine_game_manager = MineGameManager()
+synth_manager = SynthesizeManager()
+
+mine_button = GameSprite(button_images[0], Rect(70, 450, 79, 35))
+synth_button = GameSprite(button_images[1], Rect(160, 450, 79, 35))
+rank_button = GameSprite(button_images[2], Rect(250, 450, 79, 35))
+
+fps = 40
 
 def draw_recource_icons():
     for i in range(len(user_resource.recoures)):
@@ -50,11 +60,11 @@ def draw_pickaxe(count: int) -> None:
     main_scene.blit(pickaxe_image, (180, 405))
     main_scene.blit(text, (220, 410))
 
+
 def draw_buttons() -> None:
-    for i in range(len(button_images)):
-        x = 70 + i * 90
-        y = 450
-        main_scene.blit(button_images[i], (x, y))
+    main_scene.blit(mine_button.image, mine_button.rect)
+    main_scene.blit(synth_button.image, synth_button.rect)
+    main_scene.blit(rank_button.image, rank_button.rect)
 
 def draw_card(mine_cell: MineMapCell):
     if mine_cell is None or mine_cell.resource_type == ResourceType.Nothing:
@@ -65,27 +75,37 @@ def draw_card(mine_cell: MineMapCell):
     pygame.display.update()
     time.sleep(0.5)
 
+def process_button_click(posision: tuple) -> None:
+    if synth_button.is_clicked(posision):
+        print("debug: 80")
+        canvas = synth_manager.get_canvas()
+        main_scene.blit(canvas, (0, 0))
+        pygame.display.update()
+        time.sleep(2)
+
 def init_game():
     pass
 
 running = True
 while running:
     main_scene.fill((200, 200, 200))
+    draw_recource_icons()
+    draw_mine_map(mine_game_manager.mine_map)
+    draw_pickaxe(mine_game_manager.pickaxe_count)
+    draw_buttons()
+
     ev = pygame.event.get()
     for e in ev:
         if e.type == pygame.MOUSEBUTTONUP:
             pos = pygame.mouse.get_pos()
             revealed_cell = reveal_mine_cell(pos)
+            process_button_click(pos)
             draw_card(revealed_cell)
       
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
-    draw_recource_icons()
-    draw_mine_map(mine_game_manager.mine_map)
-    draw_pickaxe(mine_game_manager.pickaxe_count)
-    draw_buttons()
+
     pygame.display.update()
     clock.tick(fps)
 
