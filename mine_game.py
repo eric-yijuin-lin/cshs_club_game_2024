@@ -7,7 +7,7 @@ from game_data import UserResource, ResourceType
 class GameStatus(Enum):
     Hiden = 0
     Running = 1
-    Pause = 2
+    WaitClick = 2
 
 MINE_MAP_ROW_SIZE = 5
 MINE_MAP_COLUMN_SIZE = 6
@@ -111,15 +111,15 @@ class MineGameManager:
         img = card_images[idx]
         self.canvas.blit(img, (80, 0))
         self.card_frame_delay = CARD_FRAME_DELAY # to be calculated by FPS (40)
-        self.game_status = GameStatus.Pause
+        self.game_status = GameStatus.WaitClick
 
     def process_frame(self, events: list) -> pygame.Surface:
         if self.game_status == GameStatus.Hiden:
             return None
-        if self.game_status == GameStatus.Pause:
-            self.card_frame_delay -= 1
-            if self.card_frame_delay <= 0:
-                self.game_status = GameStatus.Running
+        if self.game_status == GameStatus.WaitClick:
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONUP:
+                    self.process_click_event()
             return self.canvas
         if self.game_status == GameStatus.Running:
             self.canvas.fill((255, 255, 255))
@@ -127,12 +127,18 @@ class MineGameManager:
             self.blit_pickaxe()
             for e in events:
                 if e.type == pygame.MOUSEBUTTONUP:
-                    main_screen_position = pygame.mouse.get_pos()
-                    child_scene_position = self.get_child_scene_position(main_screen_position)
-                    revealed_cell = self.reveal_mine_cell(child_scene_position)
-                    self.add_resource_by_cell(revealed_cell)
-                    self.blit_card(revealed_cell)
+                    self.process_click_event()
             return self.canvas
+    
+    def process_click_event(self) -> None:
+        if self.game_status == GameStatus.WaitClick:
+            self.game_status = GameStatus.Running
+            return
+        main_screen_position = pygame.mouse.get_pos()
+        child_scene_position = self.get_child_scene_position(main_screen_position)
+        revealed_cell = self.reveal_mine_cell(child_scene_position)
+        self.add_resource_by_cell(revealed_cell)
+        self.blit_card(revealed_cell)
         
     def get_child_scene_position(self, main_screen_position: tuple) -> tuple:
         return (
