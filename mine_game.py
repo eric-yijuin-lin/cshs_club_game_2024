@@ -4,7 +4,7 @@ from random import randint, uniform
 from game_assets import tile_images, pickaxe_image, card_images
 from game_data import UserResource, ResourceType
 
-class GameStatus(Enum):
+class MiningStatus(Enum):
     Hiden = 0
     Running = 1
     WaitClick = 2
@@ -59,7 +59,7 @@ class MineGameManager:
     def __init__(self, rect: tuple, user_resources: UserResource) -> None:
         self.canvas_rect = rect
         self.user_resource = user_resources
-        self.game_status = GameStatus.Running
+        self.game_status = MiningStatus.Running
         self.canvas = pygame.Surface(
             (self.canvas_rect[2],
              self.canvas_rect[3])
@@ -111,17 +111,17 @@ class MineGameManager:
         img = card_images[idx]
         self.canvas.blit(img, (80, 0))
         self.card_frame_delay = CARD_FRAME_DELAY # to be calculated by FPS (40)
-        self.game_status = GameStatus.WaitClick
+        self.game_status = MiningStatus.WaitClick
 
     def process_frame(self, events: list) -> pygame.Surface:
-        if self.game_status == GameStatus.Hiden:
+        if self.game_status == MiningStatus.Hiden:
             return None
-        if self.game_status == GameStatus.WaitClick:
+        if self.game_status == MiningStatus.WaitClick:
             for e in events:
                 if e.type == pygame.MOUSEBUTTONUP:
-                    self.game_status = GameStatus.Running
+                    self.game_status = MiningStatus.Running
             return self.canvas
-        if self.game_status == GameStatus.Running:
+        if self.game_status == MiningStatus.Running:
             self.canvas.fill((255, 255, 255))
             self.blit_mine_map()
             self.blit_pickaxe()
