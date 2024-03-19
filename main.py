@@ -1,7 +1,7 @@
 import time
 import pygame
 from pygame import Rect
-from mine_game import MineGameManager, MineMapCell, ResourceType
+from mine_game import MineGameManager
 from synthesize import SynthesizeManager
 from game_assets import *
 from game_data import UserResource
@@ -15,7 +15,7 @@ font = pygame.font.SysFont('arial', 16)
 clock = pygame.time.Clock()
 
 user_resource = UserResource()
-mine_game_manager = MineGameManager(CHILD_SCENE_RECT)
+mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_resource)
 synth_manager = SynthesizeManager()
 
 mine_button = GameSprite(button_images[0], Rect(70, 455, 79, 35))

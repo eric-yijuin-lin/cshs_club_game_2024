@@ -2,15 +2,7 @@ import pygame
 from enum import Enum
 from random import randint, uniform
 from game_assets import tile_images, pickaxe_image, card_images
-
-class ResourceType(Enum):
-    Nothing = 0
-    Stone = 1
-    Water = 2
-    Wood = 3
-    Food = 4
-    Metal = 5
-    Jewel = 6
+from game_data import UserResource, ResourceType
 
 class GameStatus(Enum):
     Hiden = 0
@@ -22,6 +14,7 @@ MINE_MAP_COLUMN_SIZE = 6
 MINE_TILE_WIDTH = 50
 MINE_TILE_HEIGHT = 50
 MAX_PICKAXE_COUNT = MINE_MAP_ROW_SIZE * MINE_MAP_COLUMN_SIZE // 2
+CARD_FRAME_DELAY = 30
 
 RESOURCE_CELL_RATE = 0.6
 RESOURCE_LEVEL_RANGE = (0.9, 0.7, 0)
@@ -63,8 +56,9 @@ class MineMapCell:
                 break
 
 class MineGameManager:
-    def __init__(self, rect: tuple) -> None:
+    def __init__(self, rect: tuple, user_resources: UserResource) -> None:
         self.canvas_rect = rect
+        self.user_resource = user_resources
         self.game_status = GameStatus.Running
         self.canvas = pygame.Surface(
             (self.canvas_rect[2],
@@ -73,7 +67,7 @@ class MineGameManager:
         self.pickaxe_count = MAX_PICKAXE_COUNT
         self.mine_map = self.new_mine_map()
         self.font = pygame.font.SysFont('arial', 16)
-        self.card_frame_delay = 60 # with fps=40, means pause 1.5 seconds
+        self.card_frame_delay = 0
 
     def new_mine_map(self) -> list[MineMapCell]:
         mine_map = []
@@ -98,6 +92,12 @@ class MineGameManager:
                 # print(cell.recource_level)
                 return cell
         return None
+    
+    def add_resource_by_cell(self, cell: MineMapCell) -> None:
+        if cell is None or cell.resource_type == ResourceType.Nothing:
+          return
+        idx = cell.resource_type.value - 1
+        self.user_resource.recoures[idx] += 1
 
     def blit_pickaxe(self) -> None:
         text = self.font.render(str(self.pickaxe_count), True, (0, 0, 0))
@@ -110,7 +110,7 @@ class MineGameManager:
         idx = mine_cell.resource_type.value - 1
         img = card_images[idx]
         self.canvas.blit(img, (80, 0))
-        self.card_frame_delay = 60
+        self.card_frame_delay = CARD_FRAME_DELAY # to be calculated by FPS (40)
         self.game_status = GameStatus.Pause
 
     def process_frame(self, events: list) -> pygame.Surface:
@@ -130,6 +130,7 @@ class MineGameManager:
                     main_screen_position = pygame.mouse.get_pos()
                     child_scene_position = self.get_child_scene_position(main_screen_position)
                     revealed_cell = self.reveal_mine_cell(child_scene_position)
+                    self.add_resource_by_cell(revealed_cell)
                     self.blit_card(revealed_cell)
             return self.canvas
         
