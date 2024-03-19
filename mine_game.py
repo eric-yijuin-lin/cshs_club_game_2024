@@ -84,7 +84,7 @@ class MineGameManager:
     
     def reveal_mine_cell(self, position: tuple) -> MineMapCell:
         for cell in self.mine_map:
-            if cell.rect.collidepoint(position):
+            if cell.rect.collidepoint(position) and not cell.is_revealed:
                 cell.is_revealed = True
                 self.pickaxe_count -= 1
                 # print(cell.rect)
@@ -119,7 +119,7 @@ class MineGameManager:
         if self.game_status == GameStatus.WaitClick:
             for e in events:
                 if e.type == pygame.MOUSEBUTTONUP:
-                    self.process_click_event()
+                    self.game_status = GameStatus.Running
             return self.canvas
         if self.game_status == GameStatus.Running:
             self.canvas.fill((255, 255, 255))
@@ -127,17 +127,17 @@ class MineGameManager:
             self.blit_pickaxe()
             for e in events:
                 if e.type == pygame.MOUSEBUTTONUP:
-                    self.process_click_event()
+                    self.process_click()
             return self.canvas
     
-    def process_click_event(self) -> None:
-        if self.game_status == GameStatus.WaitClick:
-            self.game_status = GameStatus.Running
-            return
+    def process_click(self) -> None:
         main_screen_position = pygame.mouse.get_pos()
         child_scene_position = self.get_child_scene_position(main_screen_position)
         revealed_cell = self.reveal_mine_cell(child_scene_position)
         self.add_resource_by_cell(revealed_cell)
+        if self.pickaxe_count <= 0:
+            self.mine_map = self.new_mine_map()
+            self.pickaxe_count = MAX_PICKAXE_COUNT
         self.blit_card(revealed_cell)
         
     def get_child_scene_position(self, main_screen_position: tuple) -> tuple:
