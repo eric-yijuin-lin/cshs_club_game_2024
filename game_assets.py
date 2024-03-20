@@ -34,3 +34,6 @@ button_images = [
 sythesize_images = [
     load("img/material_empty.png"),
 ]
+
+# pre-process images
+sythesize_images[0].set_alpha(75)

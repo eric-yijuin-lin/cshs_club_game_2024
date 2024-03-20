@@ -1,8 +1,9 @@
 from enum import Enum
 import pygame
 from pygame import Surface, Rect
-from game_data import ResourceType
+from game_data import ResourceType, UserResource
 from game_assets import sythesize_images
+from scene_convert import get_child_scene_position
 
 NUM_MATERIAL_ROW = 3
 NUM_MATERIAL_COLUMN = 3
@@ -15,13 +16,39 @@ class MaterialType(Enum):
     Resource = 1
     Equipment = 2
 
-class SynthesizeMaterial:
+class SynthesizeStatus:
+    Ready = 1
+    SelectMaterial = 2
+
+class MaterialSprite():
     def __init__(self) -> None:
         self.meterial_type = MaterialType.Nothing
         self.resource_type = ResourceType.Nothing
         self.resource_amount = 0
         self.equipment_id = ""
-        self.image_index = 0
+        self.image: Surface = None
+        self.rect: Rect = None
+        
+    def update_sprite(self, synthesize_index: int) -> None:
+        self.update_sprite_image()
+        self.update_sprite_rect(synthesize_index)
+
+    def update_sprite_image(self) -> None:
+        if self.meterial_type == MaterialType.Resource and self.resource_type != ResourceType.Nothing:
+            image_index = self.resource_type.value # 0 is empty icon
+        elif self.meterial_type == MaterialType.Equipment:
+            image_index = NUM_RESOURCE_TYPES + 1 # equipment image start after resources
+        else:
+            self.image_index = 0
+        self.image = sythesize_images[image_index]
+    
+    def update_sprite_rect(self, index: int) -> None:
+        self.rect = Rect(
+            10 + (index % NUM_MATERIAL_COLUMN) * MATERIAL_CELL_WIDTH,
+            10 + (index // NUM_MATERIAL_COLUMN) * MATERIAL_CELL_HEIGHT,
+            MATERIAL_CELL_WIDTH,
+            MATERIAL_CELL_HEIGHT
+        )
     
     def set_resource(self, resource_type: ResourceType, amount: int) -> None:
         self.meterial_type = MaterialType.Resource
@@ -37,59 +64,51 @@ class SynthesizeMaterial:
         self.equipment_id = equipment_id
         self.set_image_index()
 
-    def set_image_index(self) -> None:
-        if self.meterial_type == MaterialType.Resource and self.resource_type != ResourceType.Nothing:
-            self.image_index = self.resource_type.value # 0 is empty icon
-        elif self.meterial_type == MaterialType.Equipment:
-            self.image_index = NUM_RESOURCE_TYPES + 1
-        else:
-            self.image_index = 0
-
     def clear(self) -> None:
         self.__init__()
 
 class SynthesizeManager:
-    def __init__(self) -> None:
-        self.meterial_list = []
+    def __init__(self, rect: tuple, user_resources: UserResource) -> None:
+        self.meterial_list: list[MaterialSprite] = []
+        self.canvas_rect = rect
+        self.user_resource = user_resources
+        self.canvas = pygame.Surface(
+            (self.canvas_rect[2],
+             self.canvas_rect[3])
+        )
         self.init_meterial_list()
-        # self.canvas = pygame.display.set_mode((420, 300))
-        self.canvas = Surface((420, 300))
+        self.synth_status = SynthesizeStatus.Ready
 
     def init_meterial_list(self) -> None:
         for i in range(NUM_MATERIAL_ROW * NUM_MATERIAL_COLUMN):
-            self.meterial_list.append(SynthesizeMaterial())
+            self.meterial_list.append(MaterialSprite())
 
-    def get_canvas(self) -> Surface:
+    def process_frame(self) -> Surface:
+        self.canvas.fill((255, 255, 255))
         for i in range(len(self.meterial_list)):
             self.blit_meterial_image(i, self.meterial_list[i])
         return self.canvas
         
-    def blit_meterial_image(self, list_index: int, meterial: SynthesizeMaterial) -> None:
-        image = sythesize_images[meterial.image_index]
-        rect = self.get_meterial_rect(list_index)
-        self.canvas.blit(image, rect)
-    
-    def get_meterial_rect(self, index: int) -> Rect:
-        return Rect(
-            (index % NUM_MATERIAL_COLUMN) * MATERIAL_CELL_WIDTH,
-            (index // NUM_MATERIAL_COLUMN) * MATERIAL_CELL_HEIGHT,
-            MATERIAL_CELL_WIDTH,
-            MATERIAL_CELL_HEIGHT
-        )
+    def blit_meterial_image(self) -> None:
+        for m in self.meterial_list:
+            self.canvas.blit(m.image, m.rect)
 
-# screen = pygame.display.set_mode((420, 300))
-# manager = SynthesizeManager()
-# clock = pygame.time.Clock()
-# running = True
-# while running:
-#     canvas = manager.get_canvas()
-#     screen.blit(canvas, (0, 0))
-#     ev = pygame.event.get()
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             running = False
-#     pygame.display.update()
-#     clock.tick(40)
+    def process_click(self) -> None:
+        main_screen_position = pygame.mouse.get_pos()
+        child_scene_position = get_child_scene_position(main_screen_position, self.canvas_rect)
 
-# Quit Pygame
+        if self.synth_status == SynthesizeStatus.Ready:
+            clicked_material = self.get_clicked_material(child_scene_position)
+            if clicked_material:
+                self.synth_status = SynthesizeStatus.SelectMaterial
+
+    def process_material_select(self) -> Surface:
+        self.canvas.fill((255, 255, 255))
+        
+
+    def get_clicked_material(self, position: tuple) -> MaterialSprite:
+        for material in self.meterial_list:
+            if material.rect.collidepoint(position):
+                return material
+
 pygame.quit()

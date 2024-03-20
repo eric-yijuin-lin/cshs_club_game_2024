@@ -3,6 +3,7 @@ from enum import Enum
 from random import randint, uniform
 from game_assets import tile_images, pickaxe_image, card_images
 from game_data import UserResource, ResourceType
+from scene_convert import get_child_scene_position
 
 class MiningStatus(Enum):
     Hiden = 0
@@ -60,6 +61,7 @@ class MineGameManager:
         self.canvas_rect = rect
         self.user_resource = user_resources
         self.game_status = MiningStatus.Running
+        self.saved_status = MiningStatus.Hiden
         self.canvas = pygame.Surface(
             (self.canvas_rect[2],
              self.canvas_rect[3])
@@ -132,16 +134,18 @@ class MineGameManager:
     
     def process_click(self) -> None:
         main_screen_position = pygame.mouse.get_pos()
-        child_scene_position = self.get_child_scene_position(main_screen_position)
+        child_scene_position = get_child_scene_position(main_screen_position, self.canvas_rect)
         revealed_cell = self.reveal_mine_cell(child_scene_position)
         self.add_resource_by_cell(revealed_cell)
         if self.pickaxe_count <= 0:
             self.mine_map = self.new_mine_map()
             self.pickaxe_count = MAX_PICKAXE_COUNT
         self.blit_card(revealed_cell)
-        
-    def get_child_scene_position(self, main_screen_position: tuple) -> tuple:
-        return (
-            main_screen_position[0] - self.canvas_rect[0],
-            main_screen_position[1] - self.canvas_rect[1] 
-        )
+    
+    def hide(self) -> None:
+        self.saved_status = self.game_status
+        self.game_status = MiningStatus.Hiden
+
+    def activate(self) -> None:
+        self.game_status = self.saved_status
+        self.saved_status = MiningStatus.Hiden

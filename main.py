@@ -1,4 +1,5 @@
 import time
+from enum import Enum
 import pygame
 from pygame import Rect
 from mine_game import MineGameManager
@@ -6,6 +7,11 @@ from synthesize import SynthesizeManager
 from game_assets import *
 from game_data import UserResource
 from sprite import GameSprite
+
+class GameStatus(Enum):
+    MiningGame = 1
+    Synthesize = 2
+    Ranking = 3
 
 CHILD_SCENE_RECT = (0, 70, 420, 370)
 
@@ -16,13 +22,14 @@ clock = pygame.time.Clock()
 
 user_resource = UserResource()
 mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_resource)
-synth_manager = SynthesizeManager()
+synth_manager = SynthesizeManager(CHILD_SCENE_RECT, user_resource)
 
 mine_button = GameSprite(button_images[0], Rect(70, 455, 79, 35))
 synth_button = GameSprite(button_images[1], Rect(160, 455, 79, 35))
 rank_button = GameSprite(button_images[2], Rect(250, 455, 79, 35))
 
 fps = 40
+game_status = GameStatus.MiningGame
 
 def draw_recource_icons():
     for i in range(len(user_resource.recoures)):
@@ -45,15 +52,22 @@ def draw_buttons() -> None:
     main_scene.blit(rank_button.image, rank_button.rect)
 
 def process_button_click(posision: tuple) -> None:
-    if synth_button.is_clicked(posision):
-        print("debug: 80")
-        canvas = synth_manager.get_canvas()
-        main_scene.blit(canvas, (0, 0))
-        pygame.display.update()
-        time.sleep(2)
+    global game_status
+    if mine_button.is_clicked(posision):
+        game_status = GameStatus.MiningGame
+    elif synth_button.is_clicked(posision):
+        game_status = GameStatus.Synthesize
+    elif rank_button.is_clicked(posision):
+        game_status = GameStatus.Ranking
 
-def init_game():
-    pass
+def blit_child_scene(scene: pygame.Surface) -> None:
+    main_scene.blit(scene, (CHILD_SCENE_RECT[0], CHILD_SCENE_RECT[1]))
+
+def get_child_scene_position(main_scene_position: tuple) -> tuple:
+    return (
+        main_scene_position[0] - CHILD_SCENE_RECT[0],
+        main_scene_position[1] - CHILD_SCENE_RECT[1] 
+    )
 
 running = True
 while running:
@@ -62,12 +76,20 @@ while running:
     draw_buttons()
 
     events = pygame.event.get()
-    frame = mine_game_manager.process_frame(events)
-    main_scene.blit(frame, (CHILD_SCENE_RECT[0], CHILD_SCENE_RECT[1]))
-
     for event in events:
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.MOUSEBUTTONUP:
+            pos = pygame.mouse.get_pos()
+            process_button_click(pos)
+            
+    if game_status == GameStatus.MiningGame:
+        frame = mine_game_manager.process_frame(events)
+        blit_child_scene(frame)
+    elif game_status == GameStatus.Synthesize:
+        frame = synth_manager.process_frame()
+        blit_child_scene(frame)
+
 
     pygame.display.update()
     clock.tick(fps)
