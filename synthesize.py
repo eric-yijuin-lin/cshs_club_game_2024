@@ -7,11 +7,11 @@ from game_data import UserResource
 from sprite import GameSprite
 
 row_rect_templates: dict[str, tuple] = {
-    "container": (80, 5, 250, 40),
-    "icon": (85, 10, 35, 35),
-    "left_arrow": (155, 15, 35, 35),
-    "value_text": (190, 15, 95, 35),
-    "right_arrow": (300, 15, 35, 35),
+    "container": (80, 5, 245, 40),
+    "icon": (85, 10, 25, 25),
+    "left_arrow": (150, 15, 25, 25),
+    "value_text": (185, 15, 105, 35),
+    "right_arrow": (300, 15, 25, 25),
 }
 
 font.init()
@@ -69,11 +69,19 @@ class MaterialRowSprite:
     def init_child_sprites(self, material_type: MaterialType) -> dict:
         sprites = {}
         row_index = material_type.value - 1
+        # sprites["container"] = self.get_container_sprite(row_index)
         sprites["icon"] = self.get_icon_sprite(row_index)
         sprites["left_arrow"] = self.get_arrow_sprite(row_index, "left")
         sprites["right_arrow"] = self.get_arrow_sprite(row_index, "right")
         sprites["value_text"] = self.get_text_sprite(row_index)
         return sprites
+    
+    def get_container_sprite(self, row_index: int) -> dict:
+        template = row_rect_templates["container"]
+        image = Surface((template[2], template[3]))
+        image.fill((255, 0, 0))
+        rect = get_shifted_rect(template, row_index)
+        return GameSprite(image, rect)
 
     def get_icon_sprite(self, row_index: int) -> GameSprite:
         image = icon_images[row_index]
