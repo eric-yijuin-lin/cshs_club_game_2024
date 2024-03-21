@@ -8,6 +8,7 @@ from game_assets import *
 from game_data import UserResource
 from sprite import GameSprite
 
+pygame.init()
 class GameStatus(Enum):
     MiningGame = 1
     Synthesize = 2
@@ -24,9 +25,9 @@ user_resource = UserResource()
 mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_resource)
 synth_manager = SynthesizeManager(CHILD_SCENE_RECT, user_resource)
 
-mine_button = GameSprite(button_images[0], Rect(70, 455, 79, 35))
-synth_button = GameSprite(button_images[1], Rect(160, 455, 79, 35))
-rank_button = GameSprite(button_images[2], Rect(250, 455, 79, 35))
+mine_button = GameSprite(button_images["mining"], Rect(70, 455, 79, 35))
+synth_button = GameSprite(button_images["synthesize"], Rect(160, 455, 79, 35))
+rank_button = GameSprite(button_images["ranking"], Rect(250, 455, 79, 35))
 
 fps = 40
 game_status = GameStatus.MiningGame
@@ -87,7 +88,7 @@ while running:
         frame = mine_game_manager.process_frame(events)
         blit_child_scene(frame)
     elif game_status == GameStatus.Synthesize:
-        frame = synth_manager.process_frame()
+        frame = synth_manager.process_frame(events)
         blit_child_scene(frame)
 
 

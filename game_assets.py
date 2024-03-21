@@ -16,6 +16,7 @@ icon_images = [
     load("img/food_icon.png"),
     load("img/metal_icon.png"),
     load("img/jewel_icon.png"),
+    load("img/items_icon.png"),
 ]
 
 tile_images = [
@@ -25,11 +26,13 @@ tile_images = [
 
 pickaxe_image = load("img/pickaxe.png")
 
-button_images = [
-    load("img/mining_button.png"),
-    load("img/synthesize_button.png"),
-    load("img/ranking_button.png"),
-]
+button_images = {
+    "mining" : load("img/mining_button.png"),
+    "synthesize" : load("img/synthesize_button.png"),
+    "ranking" : load("img/ranking_button.png"),
+    "left_arrow" : load("img/left_arrow.png"),
+    "right_arrow" : load("img/right_arrow.png"),
+}
 
 sythesize_images = [
     load("img/material_empty.png"),
