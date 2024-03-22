@@ -133,8 +133,8 @@ class MineGameManager:
             return self.canvas
     
     def process_click(self) -> None:
-        main_screen_position = pygame.mouse.get_pos()
-        child_scene_position = get_child_scene_position(main_screen_position, self.canvas_rect)
+        global_position = pygame.mouse.get_pos()
+        child_scene_position = get_child_scene_position(global_position, self.canvas_rect)
         revealed_cell = self.reveal_mine_cell(child_scene_position)
         self.add_resource_by_cell(revealed_cell)
         if self.pickaxe_count <= 0:

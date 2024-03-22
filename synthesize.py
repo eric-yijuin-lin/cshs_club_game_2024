@@ -148,9 +148,8 @@ class SynthesizeManager:
         for sprite in row.child_sprites.values():
             self.canvas.blit(sprite.image, sprite.rect)
 
-    def get_clicked_row(self, position: tuple) -> MaterialRowSprite:
-        main_screen_position = pygame.mouse.get_pos()
-        child_scene_position = get_child_scene_position(main_screen_position, self.canvas_rect)
+    def get_clicked_row(self, global_position: tuple) -> MaterialRowSprite:
+        child_scene_position = get_child_scene_position(global_position, self.canvas_rect)
         for row in self.material_rows:
             if row.child_sprites["container"].is_clicked(child_scene_position):
                 # row.child_sprites["container"].image.fill((255, 0, 0))
