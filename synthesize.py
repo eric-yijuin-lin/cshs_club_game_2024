@@ -4,6 +4,7 @@ import pygame
 from pygame import Rect, Surface, font
 from game_assets import icon_images, button_images
 from game_data import UserResource
+from scene_convert import get_child_scene_position
 from sprite import GameSprite
 
 row_rect_templates: dict[str, tuple] = {
@@ -65,11 +66,11 @@ class MaterialRowSprite:
     def __init__(self, material_type: MaterialType) -> None:
         self.material = SynthesizeMaterial(material_type)
         self.child_sprites: dict[str, GameSprite] = self.init_child_sprites(material_type)
-    
+
     def init_child_sprites(self, material_type: MaterialType) -> dict:
         sprites = {}
         row_index = material_type.value - 1
-        # sprites["container"] = self.get_container_sprite(row_index)
+        sprites["container"] = self.get_container_sprite(row_index)
         sprites["icon"] = self.get_icon_sprite(row_index)
         sprites["left_arrow"] = self.get_arrow_sprite(row_index, "left")
         sprites["right_arrow"] = self.get_arrow_sprite(row_index, "right")
@@ -79,7 +80,7 @@ class MaterialRowSprite:
     def get_container_sprite(self, row_index: int) -> dict:
         template = row_rect_templates["container"]
         image = Surface((template[2], template[3]))
-        image.fill((255, 0, 0))
+        image.fill((255, 255, 255))
         rect = get_shifted_rect(template, row_index)
         return GameSprite(image, rect)
 
@@ -123,7 +124,7 @@ class SynthesizeManager:
             (self.canvas_rect[2],
              self.canvas_rect[3])
         )
-        self.material_rows = []
+        self.material_rows: list[MaterialRowSprite] = []
         self.init_material_rows()
 
     def init_material_rows(self) -> None:
@@ -137,8 +138,20 @@ class SynthesizeManager:
         self.canvas.fill((255, 255, 255))
         for row in self.material_rows:
             self.blit_row(row)
+        for e in events:
+            if e.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                self.get_clicked_row(pos)
         return self.canvas
 
     def blit_row(self, row: MaterialRowSprite) -> None:
         for sprite in row.child_sprites.values():
             self.canvas.blit(sprite.image, sprite.rect)
+
+    def get_clicked_row(self, position: tuple) -> MaterialRowSprite:
+        main_screen_position = pygame.mouse.get_pos()
+        child_scene_position = get_child_scene_position(main_screen_position, self.canvas_rect)
+        for row in self.material_rows:
+            if row.child_sprites["container"].is_clicked(child_scene_position):
+                # row.child_sprites["container"].image.fill((255, 0, 0))
+                return row
