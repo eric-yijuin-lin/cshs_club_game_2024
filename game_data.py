@@ -9,10 +9,27 @@ class ResourceType(Enum):
     Metal = 5
     Jewel = 6
 
-class UserResource:
+class GameItem:
+    def __init__(self, id: str, name: str, level: int) -> None:
+        self.id = id
+        self.name = name
+        self.level = level
+        self.count = 1
+
+class UserInventory:
     def __init__(self):
-        # [stone, water, wood, food, metal, jewel]
-        self.recoures = [0] * 6
+        self.recoures = [0] * 6 # [stone, water, wood, food, metal, jewel]
+        self.items: list[GameItem] = []
+        self.item_count = 0
+        self.item_index = 0
+        self.init_user_items()
+
+    def init_user_items(self) -> None:
+        self.items = [
+            GameItem("empty", "", 0),
+            GameItem("debug_1", "綠色乖乖", 99)
+        ]
+        self.item_count = len(self.items)
 
     def get_amount(self, resource_type: ResourceType) -> int:
         if resource_type == ResourceType.Stone:
@@ -53,3 +70,23 @@ class UserResource:
             self.recoures[5] += amount
             if self.recoures[5] < 0:
                 self.recoures[5] = 0
+    
+    def add_item(self, item: GameItem) -> None:
+        item_found = next((i for i in self.items if i.id == item.id), None)
+        if item_found:
+            item_found.count += 1
+        else:
+            self.items.append(item)
+            self.item_count = len(self.items)
+
+    def get_item(self, item_index: int) -> GameItem:
+        return self.items[item_index]
+
+    def use_item(self, item_index, count: int) -> None:
+        item = self.items[item_index]
+        item.count -= count
+        if item.count == 0:
+            del self.items[item_index]
+            self.item_count = len(self.items)
+
+            

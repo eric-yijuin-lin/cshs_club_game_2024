@@ -2,7 +2,7 @@ import pygame
 from enum import Enum
 from random import randint, uniform
 from game_assets import tile_images, pickaxe_image, card_images
-from game_data import UserResource, ResourceType
+from game_data import UserInventory, ResourceType
 from scene_convert import get_child_scene_position
 
 class MiningStatus(Enum):
@@ -57,7 +57,7 @@ class MineMapCell:
                 break
 
 class MineGameManager:
-    def __init__(self, rect: tuple, user_resources: UserResource) -> None:
+    def __init__(self, rect: tuple, user_resources: UserInventory) -> None:
         self.canvas_rect = rect
         self.user_resource = user_resources
         self.game_status = MiningStatus.Running

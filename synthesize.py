@@ -3,7 +3,7 @@ from enum import Enum
 import pygame
 from pygame import Rect, Surface, font
 from game_assets import icon_images, button_images
-from game_data import UserResource
+from game_data import GameItem, UserInventory
 from scene_convert import get_child_scene_position
 from sprite import GameSprite
 
@@ -41,30 +41,52 @@ class MaterialType(Enum):
     Item = 7
     
 class SynthesizeMaterial:
-    def __init__(self, type = MaterialType) -> None:
+    def __init__(self, type: MaterialType, user_inventory: UserInventory) -> None:
+        if type == MaterialType.Nothing:
+            raise ValueError("cannot init a material object with 'Nothing' type")
         self.type = type
-        self.amount = 0
-        self.item_id = "debug_1"
-        self.item_name = "阿姆斯特朗旋風噴射"
+        self.use_amount = 0
+        self.max_amount = 0
+        self.available_items: list[GameItem] = []
+        self.item_count = 0
+        self.item_index = 0
+        self.selected_item = GameItem("empty", "", 0)
+        if type == MaterialType.Item:
+            self.set_available_items(user_inventory.items)
+        else:
+            self.set_resources(user_inventory.recoures)
+
+    def set_resources(self, resources: list[int]) -> None:
+        index = self.type.value - 1
+        self.max_amount = resources[index]
+
+    def set_available_items(self, items: list[GameItem]) -> None:
+        if self.type != MaterialType.Item:
+            raise ValueError("can not set items to a non-item material")
+        self.available_items = items
+        self.item_count = len(items)
+        self.item_index = 0
+        self.selected_item = items[0]
 
     def change_amount(self, amount: int) -> None:
         if self.type == MaterialType.Item:
             raise ValueError("can not change amount of an item")
-        self.amount += amount
-        if self.amount < 0:
-            self.amount = 0
-        elif self.amount > 9999:
-            self.amount = 9999
+        self.use_amount += amount
+        if self.use_amount < 0:
+            self.use_amount = self.max_amount
+        elif self.use_amount > self.max_amount:
+            self.use_amount = 0
 
-    def change_item(self, item: dict[str, str]) -> None:
-        if self.material.type != MaterialType.Item:
+    def next_item(self, index_change: int) -> None:
+        if self.type != MaterialType.Item:
             raise ValueError("can not change item id of resources")
-        self.item_id = item["id"]
-        self.item_name = item["name"]
+        self.item_index += index_change
+        self.item_index %= self.item_count
+        self.selected_item = self.available_items[self.item_index]
 
 class MaterialRowSprite:
-    def __init__(self, material_type: MaterialType) -> None:
-        self.material = SynthesizeMaterial(material_type)
+    def __init__(self, material_type: MaterialType, inventory: UserInventory) -> None:
+        self.material = SynthesizeMaterial(material_type, inventory)
         self.child_sprites: dict[str, GameSprite] = self.init_child_sprites(material_type)
 
     def init_child_sprites(self, material_type: MaterialType) -> dict:
@@ -105,33 +127,50 @@ class MaterialRowSprite:
         return GameSprite(image, rect)
     
     def get_text_sprite(self, row_index: int) -> GameSprite:
-        value = str(self.material.amount)
-        text_surface: Surface = None
-        if self.material.type == MaterialType.Item:
-            value = self.material.item_name
-        if len(value) < 8:
-            text_surface = mideum_font.render(value, True, (0, 0, 0))
-        else:
-            text_surface = small_font.render(value, True, (0, 0, 0))
         template = row_rect_templates["value_text"]
+        text_surface = self.get_text_surface()
         rect = get_shifted_rect(template, row_index)
         return GameSprite(text_surface, rect)
+
+    def update_text_sprite(self) -> None:
+        self.child_sprites["value_text"].image = self.get_text_surface()
+    
+    def get_text_surface(self) -> Surface:
+        value = str(self.material.use_amount)
+        surface: Surface = None
+        if self.material.type == MaterialType.Item:
+            value = self.material.selected_item.name
+        if len(value) < 8:
+            surface = mideum_font.render(value, True, (0, 0, 0))
+        else:
+            surface = small_font.render(value, True, (0, 0, 0))
+        return surface
+    
+    def is_left_arrow_clicked(self, child_scene_position: tuple) -> bool:
+        left_arrow = self.child_sprites["left_arrow"]
+        return left_arrow.is_clicked(child_scene_position)
+
+    def is_right_arrow_clicked(self, child_scene_position: tuple) -> bool:
+        right_arrow = self.child_sprites["right_arrow"]
+        return right_arrow.is_clicked(child_scene_position)
     
 class SynthesizeManager:
-    def __init__(self, rect: tuple, user_resources: UserResource) -> None:
+    def __init__(self, rect: tuple, inventory: UserInventory) -> None:
         self.canvas_rect = rect
         self.canvas = Surface(
             (self.canvas_rect[2],
              self.canvas_rect[3])
         )
+        self.inventory = inventory
         self.material_rows: list[MaterialRowSprite] = []
+        self.item_dict: dict[str, str] = {}
         self.init_material_rows()
 
     def init_material_rows(self) -> None:
         for m in MaterialType:
             if m == MaterialType.Nothing:
                 continue
-            row = MaterialRowSprite(m)
+            row = MaterialRowSprite(m, self.inventory)
             self.material_rows.append(row)
 
     def process_frame(self, events: list) -> Surface:
@@ -141,16 +180,42 @@ class SynthesizeManager:
         for e in events:
             if e.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
-                self.get_clicked_row(pos)
+                self.process_click(pos)
         return self.canvas
 
     def blit_row(self, row: MaterialRowSprite) -> None:
         for sprite in row.child_sprites.values():
             self.canvas.blit(sprite.image, sprite.rect)
 
-    def get_clicked_row(self, global_position: tuple) -> MaterialRowSprite:
+    def process_click(self, global_position: tuple) -> None:
         child_scene_position = get_child_scene_position(global_position, self.canvas_rect)
+        row = self.get_clicked_row(child_scene_position)
+        if not row:
+            return
+        if row.is_left_arrow_clicked(child_scene_position):
+            self.process_arrow_click(row, "left")
+        elif row.is_right_arrow_clicked(child_scene_position):
+            self.process_arrow_click(row, "right")
+
+    def get_clicked_row(self, child_scene_position: tuple) -> MaterialRowSprite:
         for row in self.material_rows:
             if row.child_sprites["container"].is_clicked(child_scene_position):
                 # row.child_sprites["container"].image.fill((255, 0, 0))
                 return row
+        return None
+    
+    def process_arrow_click(self, row: MaterialRowSprite, arrow: str) -> None:
+        if row.material.type == MaterialType.Nothing:
+            return
+        if arrow == "left":
+            if row.material.type == MaterialType.Item:
+                row.material.next_item(-1)
+            else:
+                row.material.change_amount(-1)
+        elif arrow == "right":
+            if row.material.type == MaterialType.Item:
+                row.material.next_item(1)
+            else:
+                row.material.change_amount(1)
+        row.update_text_sprite()
+

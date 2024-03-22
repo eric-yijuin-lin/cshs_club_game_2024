@@ -5,7 +5,7 @@ from pygame import Rect
 from mine_game import MineGameManager
 from synthesize import SynthesizeManager
 from game_assets import *
-from game_data import UserResource
+from game_data import UserInventory
 from sprite import GameSprite
 
 pygame.init()
@@ -21,9 +21,9 @@ main_scene = pygame.display.set_mode((420, 500))
 font = pygame.font.SysFont('arial', 16)
 clock = pygame.time.Clock()
 
-user_resource = UserResource()
-mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_resource)
-synth_manager = SynthesizeManager(CHILD_SCENE_RECT, user_resource)
+user_inventory = UserInventory()
+mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_inventory)
+synth_manager = SynthesizeManager(CHILD_SCENE_RECT, user_inventory)
 
 mine_button = GameSprite(button_images["mining"], Rect(70, 455, 79, 35))
 synth_button = GameSprite(button_images["synthesize"], Rect(160, 455, 79, 35))
@@ -33,15 +33,15 @@ fps = 40
 game_status = GameStatus.MiningGame
 
 def draw_recource_icons():
-    for i in range(len(user_resource.recoures)):
+    for i in range(len(user_inventory.recoures)):
         x = 80 + (i % 3) * 100
         y = 5 + (i // 3) * 30
         main_scene.blit(icon_images[i], (x, y))
     draw_resource_amount()
 
 def draw_resource_amount() -> None:
-    for i in range(len(user_resource.recoures)):
-        resource = user_resource.recoures[i]
+    for i in range(len(user_inventory.recoures)):
+        resource = user_inventory.recoures[i]
         text = font.render(str(resource), True, (0, 0, 0))
         x = 120 + (i % 3) * 100
         y = 5 + (i // 3) * 35
