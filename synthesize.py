@@ -164,9 +164,10 @@ class SynthesizeManager:
         self.inventory = inventory
         self.material_rows: list[MaterialRowSprite] = []
         self.item_dict: dict[str, str] = {}
-        self.init_material_rows()
+        self.refresh_material_rows()
 
-    def init_material_rows(self) -> None:
+    def refresh_material_rows(self) -> None:
+        self.material_rows = []
         for m in MaterialType:
             if m == MaterialType.Nothing:
                 continue
@@ -218,4 +219,3 @@ class SynthesizeManager:
             else:
                 row.material.change_amount(1)
         row.update_text_sprite()
-

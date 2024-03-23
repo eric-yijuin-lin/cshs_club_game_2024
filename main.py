@@ -57,6 +57,7 @@ def process_button_click(posision: tuple) -> None:
     if mine_button.is_clicked(posision):
         game_status = GameStatus.MiningGame
     elif synth_button.is_clicked(posision):
+        synth_manager.refresh_material_rows()
         game_status = GameStatus.Synthesize
     elif rank_button.is_clicked(posision):
         game_status = GameStatus.Ranking
