@@ -30,7 +30,7 @@ def get_shifted_rect(template: tuple, row_index: int) -> Rect:
 
 
 # need to refactor later, to synchronize ResourceType and MaterialType
-class MaterialType(Enum):
+class IngredientType(Enum):
     Nothing = 0
     Stone = 1
     Water = 2
@@ -40,9 +40,9 @@ class MaterialType(Enum):
     Jewel = 6
     Item = 7
     
-class SynthesizeMaterial:
-    def __init__(self, type: MaterialType, user_inventory: UserInventory) -> None:
-        if type == MaterialType.Nothing:
+class CraftIngredient:
+    def __init__(self, type: IngredientType, user_inventory: UserInventory) -> None:
+        if type == IngredientType.Nothing:
             raise ValueError("cannot init a material object with 'Nothing' type")
         self.type = type
         self.use_amount = 0
@@ -51,7 +51,7 @@ class SynthesizeMaterial:
         self.item_count = 0
         self.item_index = 0
         self.selected_item = GameItem("empty", "", 0)
-        if type == MaterialType.Item:
+        if type == IngredientType.Item:
             self.set_available_items(user_inventory.items)
         else:
             self.set_resources(user_inventory.recoures)
@@ -61,7 +61,7 @@ class SynthesizeMaterial:
         self.max_amount = resources[index]
 
     def set_available_items(self, items: list[GameItem]) -> None:
-        if self.type != MaterialType.Item:
+        if self.type != IngredientType.Item:
             raise ValueError("can not set items to a non-item material")
         self.available_items = items
         self.item_count = len(items)
@@ -69,7 +69,7 @@ class SynthesizeMaterial:
         self.selected_item = items[0]
 
     def change_amount(self, amount: int) -> None:
-        if self.type == MaterialType.Item:
+        if self.type == IngredientType.Item:
             raise ValueError("can not change amount of an item")
         self.use_amount += amount
         if self.use_amount < 0:
@@ -78,18 +78,18 @@ class SynthesizeMaterial:
             self.use_amount = 0
 
     def next_item(self, index_change: int) -> None:
-        if self.type != MaterialType.Item:
+        if self.type != IngredientType.Item:
             raise ValueError("can not change item id of resources")
         self.item_index += index_change
         self.item_index %= self.item_count
         self.selected_item = self.available_items[self.item_index]
 
-class MaterialRowSprite:
-    def __init__(self, material_type: MaterialType, inventory: UserInventory) -> None:
-        self.material = SynthesizeMaterial(material_type, inventory)
+class IngredientRowSprite:
+    def __init__(self, material_type: IngredientType, inventory: UserInventory) -> None:
+        self.material = CraftIngredient(material_type, inventory)
         self.child_sprites: dict[str, GameSprite] = self.init_child_sprites(material_type)
 
-    def init_child_sprites(self, material_type: MaterialType) -> dict:
+    def init_child_sprites(self, material_type: IngredientType) -> dict:
         sprites = {}
         row_index = material_type.value - 1
         sprites["container"] = self.get_container_sprite(row_index)
@@ -138,7 +138,7 @@ class MaterialRowSprite:
     def get_text_surface(self) -> Surface:
         value = str(self.material.use_amount)
         surface: Surface = None
-        if self.material.type == MaterialType.Item:
+        if self.material.type == IngredientType.Item:
             value = self.material.selected_item.name
         if len(value) < 8:
             surface = mideum_font.render(value, True, (0, 0, 0))
@@ -154,7 +154,7 @@ class MaterialRowSprite:
         right_arrow = self.child_sprites["right_arrow"]
         return right_arrow.is_clicked(child_scene_position)
     
-class SynthesizeManager:
+class CraftManager:
     def __init__(self, rect: tuple, inventory: UserInventory) -> None:
         self.canvas_rect = rect
         self.canvas = Surface(
@@ -162,16 +162,16 @@ class SynthesizeManager:
              self.canvas_rect[3])
         )
         self.inventory = inventory
-        self.material_rows: list[MaterialRowSprite] = []
+        self.material_rows: list[IngredientRowSprite] = []
         self.item_dict: dict[str, str] = {}
         self.refresh_material_rows()
 
     def refresh_material_rows(self) -> None:
         self.material_rows = []
-        for m in MaterialType:
-            if m == MaterialType.Nothing:
+        for m in IngredientType:
+            if m == IngredientType.Nothing:
                 continue
-            row = MaterialRowSprite(m, self.inventory)
+            row = IngredientRowSprite(m, self.inventory)
             self.material_rows.append(row)
 
     def process_frame(self, events: list) -> Surface:
@@ -184,7 +184,7 @@ class SynthesizeManager:
                 self.process_click(pos)
         return self.canvas
 
-    def blit_row(self, row: MaterialRowSprite) -> None:
+    def blit_row(self, row: IngredientRowSprite) -> None:
         for sprite in row.child_sprites.values():
             self.canvas.blit(sprite.image, sprite.rect)
 
@@ -198,23 +198,23 @@ class SynthesizeManager:
         elif row.is_right_arrow_clicked(child_scene_position):
             self.process_arrow_click(row, "right")
 
-    def get_clicked_row(self, child_scene_position: tuple) -> MaterialRowSprite:
+    def get_clicked_row(self, child_scene_position: tuple) -> IngredientRowSprite:
         for row in self.material_rows:
             if row.child_sprites["container"].is_clicked(child_scene_position):
                 # row.child_sprites["container"].image.fill((255, 0, 0))
                 return row
         return None
     
-    def process_arrow_click(self, row: MaterialRowSprite, arrow: str) -> None:
-        if row.material.type == MaterialType.Nothing:
+    def process_arrow_click(self, row: IngredientRowSprite, arrow: str) -> None:
+        if row.material.type == IngredientType.Nothing:
             return
         if arrow == "left":
-            if row.material.type == MaterialType.Item:
+            if row.material.type == IngredientType.Item:
                 row.material.next_item(-1)
             else:
                 row.material.change_amount(-1)
         elif arrow == "right":
-            if row.material.type == MaterialType.Item:
+            if row.material.type == IngredientType.Item:
                 row.material.next_item(1)
             else:
                 row.material.change_amount(1)
