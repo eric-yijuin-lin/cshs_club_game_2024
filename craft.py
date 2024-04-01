@@ -2,7 +2,7 @@ from enum import Enum
 
 import pygame
 from pygame import Rect, Surface, font
-from game_assets import icon_images, button_images
+from game_assets import icon_images, button_images, craft_recipes
 from game_data import GameItem, UserInventory
 from scene_convert import get_child_scene_position
 from sprite import GameSprite
@@ -50,7 +50,7 @@ class CraftIngredient:
         self.available_items: list[GameItem] = []
         self.item_count = 0
         self.item_index = 0
-        self.selected_item = GameItem("empty", "", 0)
+        self.selected_item = GameItem("", "", 0)
         if type == IngredientType.Item:
             self.set_available_items(user_inventory.items)
         else:
@@ -85,15 +85,15 @@ class CraftIngredient:
         self.selected_item = self.available_items[self.item_index]
 
 class IngredientRowSprite:
-    def __init__(self, material_type: IngredientType, inventory: UserInventory) -> None:
+    def __init__(self, row_index: int, material_type: IngredientType, inventory: UserInventory) -> None:
         self.material = CraftIngredient(material_type, inventory)
-        self.child_sprites: dict[str, GameSprite] = self.init_child_sprites(material_type)
+        self.child_sprites: dict[str, GameSprite] = self.init_child_sprites(row_index, material_type)
 
-    def init_child_sprites(self, material_type: IngredientType) -> dict:
+    def init_child_sprites(self, row_index: int, material_type: IngredientType) -> dict:
         sprites = {}
-        row_index = material_type.value - 1
+        
         sprites["container"] = self.get_container_sprite(row_index)
-        sprites["icon"] = self.get_icon_sprite(row_index)
+        sprites["icon"] = self.get_icon_sprite(row_index, material_type)
         sprites["left_arrow"] = self.get_arrow_sprite(row_index, "left")
         sprites["right_arrow"] = self.get_arrow_sprite(row_index, "right")
         sprites["value_text"] = self.get_text_sprite(row_index)
@@ -106,8 +106,9 @@ class IngredientRowSprite:
         rect = get_shifted_rect(template, row_index)
         return GameSprite(image, rect)
 
-    def get_icon_sprite(self, row_index: int) -> GameSprite:
-        image = icon_images[row_index]
+    def get_icon_sprite(self, row_index: int, ingred_type: IngredientType) -> GameSprite:
+        icon_index = ingred_type.value - 1
+        image = icon_images[icon_index]
         template = row_rect_templates["icon"]
         rect = get_shifted_rect(template, row_index)
         return GameSprite(image, rect)
@@ -165,13 +166,24 @@ class CraftManager:
         self.material_rows: list[IngredientRowSprite] = []
         self.item_dict: dict[str, str] = {}
         self.refresh_material_rows()
+        self.craft_recipe: tuple = None
+        self.recipe_matched = False
 
     def refresh_material_rows(self) -> None:
+        ingred_types = [
+            IngredientType.Stone,
+            IngredientType.Water,
+            IngredientType.Wood,
+            IngredientType.Food,
+            IngredientType.Metal,
+            IngredientType.Jewel,
+            IngredientType.Item,
+            IngredientType.Item,
+        ]
         self.material_rows = []
-        for m in IngredientType:
-            if m == IngredientType.Nothing:
-                continue
-            row = IngredientRowSprite(m, self.inventory)
+        for i in range(len(ingred_types)):
+            ingred_type = ingred_types[i]
+            row = IngredientRowSprite(i, ingred_type, self.inventory)
             self.material_rows.append(row)
 
     def process_frame(self, events: list) -> Surface:
@@ -218,4 +230,22 @@ class CraftManager:
                 row.material.next_item(1)
             else:
                 row.material.change_amount(1)
+        else:
+            raise ValueError("unsupported arrow click")
         row.update_text_sprite()
+        self.update_recipe()
+
+    def update_recipe(self) -> None:
+        ingredients = []
+        for row in self.material_rows:
+            if row.material.type == IngredientType.Item:
+                ingredients.append(row.material.selected_item.id)
+            else:
+                ingredients.append(row.material.use_amount)
+        self.craft_recipe = tuple(ingredients)
+        if self.craft_recipe in craft_recipes:
+            print(f"recipe matched: {self.craft_recipe}")
+            self.recipe_matched = True
+        else:
+            self.recipe_matched = False
+        

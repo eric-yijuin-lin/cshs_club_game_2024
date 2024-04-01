@@ -3,7 +3,7 @@ from enum import Enum
 import pygame
 from pygame import Rect
 from mine_game import MineGameManager
-from synthesize import SynthesizeManager
+from craft import CraftManager
 from game_assets import *
 from game_data import UserInventory
 from sprite import GameSprite
@@ -23,7 +23,7 @@ clock = pygame.time.Clock()
 
 user_inventory = UserInventory()
 mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_inventory)
-synth_manager = SynthesizeManager(CHILD_SCENE_RECT, user_inventory)
+synth_manager = CraftManager(CHILD_SCENE_RECT, user_inventory)
 
 mine_button = GameSprite(button_images["mining"], Rect(70, 455, 79, 35))
 synth_button = GameSprite(button_images["synthesize"], Rect(160, 455, 79, 35))

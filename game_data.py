@@ -26,7 +26,7 @@ class UserInventory:
 
     def init_user_items(self) -> None:
         self.items = [
-            GameItem("empty", "", 0),
+            GameItem("", "", 0),
             GameItem("debug_1", "綠色乖乖", 99)
         ]
         self.item_count = len(self.items)
