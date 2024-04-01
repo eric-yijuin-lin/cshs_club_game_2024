@@ -1,4 +1,5 @@
 from pygame.image import load
+from recipe import craft_recipes
 
 card_images = [
     load("img/stone_1.png"),
