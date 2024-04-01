@@ -20,6 +20,8 @@ icon_images = [
     load("img/items_icon.png"),
 ]
 
+coin_image = load("img/coin_icon.png")
+
 tile_images = [
     load("img/mud_tile_revealed.png"),
     load("img/mud_tile.png"),
