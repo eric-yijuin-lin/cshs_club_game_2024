@@ -28,16 +28,10 @@ tile_images = [
 pickaxe_image = load("img/pickaxe.png")
 
 button_images = {
-    "mining" : load("img/mining_button.png"),
-    "synthesize" : load("img/synthesize_button.png"),
-    "ranking" : load("img/ranking_button.png"),
-    "left_arrow" : load("img/left_arrow.png"),
-    "right_arrow" : load("img/right_arrow.png"),
+    "mining_menu": load("img/mining_menu_button.png"),
+    "craft_menu": load("img/craft_menu_button.png"),
+    "rank_menu": load("img/rank_menu_button.png"),
+    "left_arrow": load("img/left_arrow.png"),
+    "right_arrow": load("img/right_arrow.png"),
+    "confirm_craft": load("img/confirm_craft_button.png"),
 }
-
-sythesize_images = [
-    load("img/material_empty.png"),
-]
-
-# pre-process images
-sythesize_images[0].set_alpha(75)

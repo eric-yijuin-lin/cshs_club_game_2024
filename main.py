@@ -25,9 +25,9 @@ user_inventory = UserInventory()
 mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_inventory)
 synth_manager = CraftManager(CHILD_SCENE_RECT, user_inventory)
 
-mine_button = GameSprite(button_images["mining"], Rect(70, 455, 79, 35))
-synth_button = GameSprite(button_images["synthesize"], Rect(160, 455, 79, 35))
-rank_button = GameSprite(button_images["ranking"], Rect(250, 455, 79, 35))
+mine_button = GameSprite(button_images["mining_menu"], Rect(70, 455, 79, 35))
+synth_button = GameSprite(button_images["craft_menu"], Rect(160, 455, 79, 35))
+rank_button = GameSprite(button_images["rank_menu"], Rect(250, 455, 79, 35))
 
 fps = 40
 game_status = GameStatus.MiningGame
