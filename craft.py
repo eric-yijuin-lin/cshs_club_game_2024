@@ -50,7 +50,8 @@ class CraftIngredient:
         self.available_items: list[GameItem] = []
         self.item_count = 0
         self.item_index = 0
-        self.selected_item = GameItem("", "", 0)
+        self.selected_item_1 = GameItem("", "", 0)
+        self.selected_item_2 = GameItem("", "", 0)
         if type == IngredientType.Item:
             self.set_available_items(user_inventory.items)
         else:
@@ -66,7 +67,7 @@ class CraftIngredient:
         self.available_items = items
         self.item_count = len(items)
         self.item_index = 0
-        self.selected_item = items[0]
+        self.selected_item_1 = items[0]
 
     def change_amount(self, amount: int) -> None:
         if self.type == IngredientType.Item:
@@ -82,7 +83,7 @@ class CraftIngredient:
             raise ValueError("can not change item id of resources")
         self.item_index += index_change
         self.item_index %= self.item_count
-        self.selected_item = self.available_items[self.item_index]
+        self.selected_item_1 = self.available_items[self.item_index]
 
 class IngredientRowSprite:
     def __init__(self, row_index: int, material_type: IngredientType, inventory: UserInventory) -> None:
@@ -140,7 +141,7 @@ class IngredientRowSprite:
         value = str(self.material.use_amount)
         surface: Surface = None
         if self.material.type == IngredientType.Item:
-            value = self.material.selected_item.name
+            value = self.material.selected_item_1.name
         if len(value) < 8:
             surface = mideum_font.render(value, True, (0, 0, 0))
         else:
@@ -239,7 +240,7 @@ class CraftManager:
         ingredients = []
         for row in self.material_rows:
             if row.material.type == IngredientType.Item:
-                ingredients.append(row.material.selected_item.id)
+                ingredients.append(row.material.selected_item_1.id)
             else:
                 ingredients.append(row.material.use_amount)
         self.craft_recipe = tuple(ingredients)

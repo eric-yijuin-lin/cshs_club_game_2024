@@ -24,6 +24,7 @@ class CraftRecipe:
     def __init__(self, csv_row: list) -> None:
         data_row = CraftRecipe.get_converted_row(csv_row)
         self.recipe = CraftRecipe.extract_recipe(data_row)
+        self.money_cost = data_row[14]
         self.is_craftable = CraftRecipe.check_craftable(self.recipe)
         self.card = Card(data_row)
 
@@ -44,7 +45,7 @@ class CraftRecipe:
             int(csv_row[11]), # 合成所需珠寶   
             csv_row[12], # 合成所需物品 1
             csv_row[13], # 合成所需物品 2
-            int(csv_row[14]),
+            int(csv_row[14]), # 消耗金幣，此版本不計入合成配方
             csv_row[15], # 卡片描述，不計入合成配方
         )
 
@@ -59,7 +60,7 @@ class CraftRecipe:
             data_row[11], # 珠寶
             data_row[12], # 物品1
             data_row[13], # 物品2
-            data_row[14], # 合成需要金幣
+            # data_row[14] # 消耗金幣，此版本不計入合成配方
         )
     
     @staticmethod
