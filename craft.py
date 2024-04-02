@@ -196,7 +196,6 @@ class CraftManager:
         )
         self.inventory = inventory
         self.material_rows: list[IngredientRowSprite] = []
-        self.item_dict: dict[str, str] = {}
         self.ingredients: tuple = None
         self.matched_recipe: CraftRecipe = None
         self.show_craft_component = False
@@ -283,7 +282,28 @@ class CraftManager:
         pass
 
     def enough_ingredients(self) -> bool:
-        pass
+        if not self.enough_resource():
+            return False
+        if not self.enough_items():
+            return False
+    
+    def enough_resource(self) -> bool:
+        resource_count = len(self.inventory.recoures)
+        for i in range(resource_count):
+            if self.ingredients[i] < self.inventory.recoures[i]:
+                return False
+
+    def enough_items(self) -> bool:
+        id_1 = self.ingredients[6]
+        id_2 = self.ingredients[7]
+        item_1 = next((i for i in self.inventory.items if i.id == id_1), None)
+        item_2 = next((i for i in self.inventory.items if i.id == id_2), None)
+        if item_1 is None or item_2 is None:
+            return False
+        if item_1.count < 1 or item_2.count < 1:
+            return False
+        if id_1 == id_2 and item_1.count < 2:
+            return False
 
     def update_recipe(self) -> None:
         self.ingredients = self.get_selected_ingredients()
