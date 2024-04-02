@@ -34,18 +34,21 @@ game_status = GameStatus.MiningGame
 
 def draw_recource_icons():
     for i in range(len(user_inventory.recoures)):
-        x = 80 + (i % 3) * 100
-        y = 5 + (i // 3) * 30
+        x = 65 + (i % 4) * 75
+        y = 5 + (i // 4) * 30
         main_scene.blit(icon_images[i], (x, y))
+        main_scene.blit(coin_image, (215, 35))
     draw_resource_amount()
 
 def draw_resource_amount() -> None:
     for i in range(len(user_inventory.recoures)):
         resource = user_inventory.recoures[i]
         text = font.render(str(resource), True, (0, 0, 0))
-        x = 120 + (i % 3) * 100
-        y = 5 + (i // 3) * 35
+        x = 105 + (i % 4) * 75
+        y = 10 + (i // 4) * 30
         main_scene.blit(text, (x, y))
+    text = font.render(str(user_inventory.coins), True, (0, 0, 0))
+    main_scene.blit(text, (255, 40))
 
 def draw_buttons() -> None:
     main_scene.blit(mine_button.image, mine_button.rect)

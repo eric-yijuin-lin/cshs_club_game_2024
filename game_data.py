@@ -19,6 +19,7 @@ class GameItem:
 class UserInventory:
     def __init__(self):
         self.recoures = [0] * 6 # [stone, water, wood, food, metal, jewel]
+        self.coins = 0
         self.items: list[GameItem] = []
         self.item_count = 0
         self.item_index = 0
@@ -31,7 +32,7 @@ class UserInventory:
         ]
         self.item_count = len(self.items)
 
-    def get_amount(self, resource_type: ResourceType) -> int:
+    def get_resource_amount(self, resource_type: ResourceType) -> int:
         if resource_type == ResourceType.Stone:
             return self.recoures[0]
         if resource_type == ResourceType.Water:
@@ -45,7 +46,7 @@ class UserInventory:
         if resource_type == ResourceType.Jewel:
             return self.recoures[5]
 
-    def change_amount(self, resource_type: ResourceType, amount: int) -> None:
+    def change_resource_amount(self, resource_type: ResourceType, amount: int) -> None:
         if resource_type == ResourceType.Stone:
             self.recoures[0] += amount
             if self.recoures[0] < 0:
@@ -88,5 +89,13 @@ class UserInventory:
         if item.count == 0:
             del self.items[item_index]
             self.item_count = len(self.items)
+
+    def add_coins(self, amount: int) -> None:
+        self.coins += amount
+
+    def use_coins(self, amount: int) -> None:
+        if self.coins < amount:
+            raise ValueError("insufficient coins")
+        self.coins -= amount
 
             
