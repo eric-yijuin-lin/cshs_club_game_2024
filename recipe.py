@@ -25,7 +25,7 @@ class CraftRecipe:
         data_row = CraftRecipe.get_converted_row(csv_row)
         self.recipe = CraftRecipe.extract_recipe(data_row)
         self.money_cost = data_row[14]
-        self.is_craftable = CraftRecipe.check_craftable(self.recipe)
+        self.is_craftable = CraftRecipe.get_craftability(self.recipe)
         self.card = Card(data_row)
 
     @staticmethod
@@ -64,7 +64,7 @@ class CraftRecipe:
         )
     
     @staticmethod
-    def check_craftable(recipe: tuple) -> None:
+    def get_craftability(recipe: tuple) -> bool:
         primitive_values = (0 ,0 ,0, 0, 0, 0, "", "", 0)
         for i in range(len(recipe)):
             if recipe[i] != primitive_values[i]:
@@ -82,5 +82,6 @@ with open('recipes.csv', encoding="utf8") as f:
             print("表頭欄位：", row)
         else:
             craft = CraftRecipe(row)
-            craft_recipes[craft.recipe] = craft
+            if craft.is_craftable:
+                craft_recipes[craft.recipe] = craft
 print(craft_recipes)

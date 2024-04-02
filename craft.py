@@ -4,7 +4,7 @@ import pygame
 from pygame import Rect, Surface, font
 from game_assets import icon_images, button_images, craft_recipes, coin_image
 from game_data import GameItem, UserInventory
-from recipe import Card
+from recipe import CraftRecipe
 from scene_convert import get_child_scene_position
 from sprite import GameSprite
 
@@ -182,7 +182,7 @@ class ConfirmCraftComponent:
         )
     
     def update_cost(self, amount: int) -> None:
-        self.cost_amount_sprite = self.cost_font.render(str(amount), True, (0, 0, 0))
+        self.sprites["cost_amount_sprite"].image = self.cost_font.render(str(amount), True, (0, 0, 0))
 
     def is_craft_button_clicked(self, child_scene_position: tuple) -> bool:
         return self.sprites["craft_button_sprite"].is_clicked(child_scene_position)
@@ -197,8 +197,8 @@ class CraftManager:
         self.inventory = inventory
         self.material_rows: list[IngredientRowSprite] = []
         self.item_dict: dict[str, str] = {}
-        self.current_recipe: tuple = None
-        self.matched_card: Card = None
+        self.ingredients: tuple = None
+        self.matched_recipe: CraftRecipe = None
         self.show_craft_component = False
         self.craft_component = ConfirmCraftComponent()
         self.refresh_material_rows()
@@ -286,19 +286,23 @@ class CraftManager:
         pass
 
     def update_recipe(self) -> None:
+        self.ingredients = self.get_selected_ingredients()
+        if self.ingredients in craft_recipes:
+            recipe = craft_recipes[self.ingredients]
+            if recipe.is_craftable:
+                print(f"recipe matched: {self.ingredients}")
+                self.matched_recipe = craft_recipes[self.ingredients]
+                self.craft_component.update_cost(self.matched_recipe.money_cost)
+                self.show_craft_component = True
+        else:
+            self.show_craft_component = False
+            self.matched_recipe = None
+    
+    def get_selected_ingredients(self) -> tuple:
         ingredients = []
         for row in self.material_rows:
             if row.material.type == IngredientType.Item:
                 ingredients.append(row.material.selected_item_1.id)
             else:
                 ingredients.append(row.material.use_amount)
-        self.current_recipe = tuple(ingredients)
-        if self.current_recipe in craft_recipes:
-            print(f"recipe matched: {self.current_recipe}")
-            self.matched_card = craft_recipes[self.current_recipe]
-            self.craft_component.update_cost(self.matched_card.money_cost)
-            self.show_craft_component = True
-        else:
-            self.show_craft_component = False
-            self.matched_card = None
-        
+        return tuple(ingredients)
