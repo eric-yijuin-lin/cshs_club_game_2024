@@ -88,16 +88,22 @@ def get_folded_text_lines(font: Font, text: str, rect_width: int) -> list[str]:
     text_lines.append(temp_line)
     return text_lines
 
-def render_text(font: Font, text: str, rect: Rect, canvas: Surface) -> None:
+def render_text(font: Font, text: str, rect: Rect, canvas: Surface, align_center:bool = True) -> None:
     text_lines = get_folded_text_lines(font, text, rect[2])
     line_height = font.size(text)[1] + TEXT_LINE_MARGIN
     for i in range(len(text_lines)):
         line = text_lines[i]
-        x = rect[0] + TEXT_LINE_MARGIN
-        y = rect[1] + i * line_height
         line_surface = font.render(line, True, (0, 0, 0))
-        print("debug", x, y)
+        x = get_text_coord_x(line_surface, rect, align_center)
+        y = rect[1] + i * line_height
         canvas.blit(line_surface, (x, y))
+
+def get_text_coord_x(text_surface: Surface, rect: Rect, align_center: bool) -> int:
+    if not align_center:
+        return rect[0] + TEXT_LINE_MARGIN
+    if text_surface.get_size()[0] >= rect[2]:
+        return rect[0] + TEXT_LINE_MARGIN
+    return rect.center[0] - text_surface.get_width() // 2
 
 def render_name(card: Card, canvas: Surface) -> GameSprite:
     rect = get_surface_rect(card.type, "name")
@@ -142,30 +148,28 @@ def render_coin_amount(card: Card, canvas: Surface) -> GameSprite:
 
 def compose_resource_card(card: Card) -> GameSprite:
     template = get_template(card)
-    render_name(card, template)
     image_sprite = get_image_sprite(card)
     resource_icon= get_resource_icon_sprite(card)
-    render_resource_amount(card, template)
     coin_icon = get_coin_icon_sprite(card)
-    render_coin_amount(card, template)
-    render_description(card, template)
     template.blit(image_sprite.image, image_sprite.rect)
     template.blit(resource_icon.image, resource_icon.rect)
     template.blit(coin_icon.image, coin_icon.rect)
+    render_name(card, template)
+    render_resource_amount(card, template)
+    render_coin_amount(card, template)
+    render_description(card, template)
     return template
 
 def compose_item_card(card: Card) -> GameSprite:
     template = get_template(card)
-    name = render_name(card)
     image_sprite = get_image_sprite(card)
     coin_icon = get_coin_icon_sprite(card)
-    coin_amount = render_coin_amount(card)
-    description = render_description(card)
-    template.blit(name.image, name.rect)
     template.blit(image_sprite.image, image_sprite.rect)
     template.blit(coin_icon.image, coin_icon.rect)
-    template.blit(coin_amount.image, coin_amount.rect)
-    template.blit(description.image, description.rect)
+    render_name(card, template)
+    render_resource_amount(card, template)
+    render_coin_amount(card, template)
+    render_description(card, template)
     return template
 
 card = Card([
