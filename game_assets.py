@@ -1,14 +1,13 @@
 from pygame.image import load
-from recipe import craft_recipes
 
-card_images = [
-    load("img/stone_1.png"),
-    load("img/water_1.png"),
-    load("img/wood_1.png"),
-    load("img/food_1.png"),
-    load("img/metal_1.png"),
-    load("img/jewel_1.png"),
-]
+card_images = {
+    "stone_1_1": load("img/card_images/stone_1_1.png"),
+    "water_1_1": load("img/card_images/water_1_1.png"),
+    "wood_1_1": load("img/card_images/wood_1_1.png"),
+    "food_1_1": load("img/card_images/food_1_1.png"),
+    "metal_1_1": load("img/card_images/metal_1_1.png"),
+    "jewel_1_1": load("img/card_images/jewel_1_1.png"),
+}
 
 icon_images = [
     load("img/stone_icon.png"),
@@ -36,4 +35,22 @@ button_images = {
     "left_arrow": load("img/left_arrow.png"),
     "right_arrow": load("img/right_arrow.png"),
     "confirm_craft": load("img/confirm_craft_button.png"),
+}
+
+card_teamplates = {
+    "resource": {
+        "stone": load("img/card_templates/resource_stone.png"),
+        "water": load("img/card_templates/resource_water.png"),
+        "wood": load("img/card_templates/resource_wood.png"),
+        "food": load("img/card_templates/resource_food.png"),
+        "metal": load("img/card_templates/resource_metal.png"),
+        "jewel": load("img/card_templates/resource_jewel.png"),
+    },
+    "item": {
+        "lv_1": load("img/card_templates/item_lv_1.png"),
+        "lv_2": load("img/card_templates/item_lv_2.png"),
+        "lv_3": load("img/card_templates/item_lv_3.png"),
+        "lv_4": load("img/card_templates/item_lv_4.png"),
+        "lv_5": load("img/card_templates/item_lv_5.png"),
+    }
 }
