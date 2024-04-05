@@ -33,7 +33,7 @@ fps = 40
 game_status = GameStatus.MiningGame
 
 def draw_recource_icons():
-    for i in range(len(user_inventory.recoures)):
+    for i in range(len(user_inventory.resources)):
         x = 65 + (i % 4) * 75
         y = 5 + (i // 4) * 30
         main_scene.blit(icon_images[i], (x, y))
@@ -41,8 +41,8 @@ def draw_recource_icons():
     draw_resource_amount()
 
 def draw_resource_amount() -> None:
-    for i in range(len(user_inventory.recoures)):
-        resource = user_inventory.recoures[i]
+    for i in range(len(user_inventory.resources)):
+        resource = user_inventory.resources[i]
         text = font.render(str(resource), True, (0, 0, 0))
         x = 105 + (i % 4) * 75
         y = 10 + (i // 4) * 30

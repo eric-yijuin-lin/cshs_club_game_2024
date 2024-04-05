@@ -99,7 +99,7 @@ class MineGameManager:
         if cell is None or cell.resource_type == ResourceType.Nothing:
           return
         idx = cell.resource_type.value - 1
-        self.user_resource.recoures[idx] += 1
+        self.user_resource.resources[idx] += 1
 
     def blit_pickaxe(self) -> None:
         text = self.font.render(str(self.pickaxe_count), True, (0, 0, 0))
@@ -112,7 +112,6 @@ class MineGameManager:
         idx = mine_cell.resource_type.value - 1
         img = card_images[idx]
         self.canvas.blit(img, (80, 0))
-        self.card_frame_delay = CARD_FRAME_DELAY # to be calculated by FPS (40)
         self.game_status = MiningStatus.WaitClick
 
     def process_frame(self, events: list) -> pygame.Surface:
@@ -140,7 +139,7 @@ class MineGameManager:
         if self.pickaxe_count <= 0:
             self.mine_map = self.new_mine_map()
             self.pickaxe_count = MAX_PICKAXE_COUNT
-        self.blit_card(revealed_cell)
+        self.blit_card(revealed_cell) # TODO: move status changing out
     
     def hide(self) -> None:
         self.saved_status = self.game_status

@@ -1,31 +1,13 @@
 import csv
 
-card_type_dict = {
-    "石頭": "stone",
-    "水": "water",
-    "木材": "wood",
-    "食物": "food",
-    "金屬": "metal",
-    "珠寶": "jewel",
-    "物品": "item"
-}
-
-class Card:
-    def __init__(self, data_row: list) -> None:
-        self.id = data_row[0]
-        self.name = data_row[1]
-        self.type = card_type_dict[data_row[2]]
-        self.level = data_row[3]
-        self.resource_amount = data_row[4]
-        self.sell_price = data_row[5]
-        self.description = data_row[15]
+from game_data import Card
 
 class CraftRecipe:
     def __init__(self, csv_row: list) -> None:
         data_row = CraftRecipe.get_converted_row(csv_row)
-        self.recipe = CraftRecipe.extract_recipe(data_row)
-        self.money_cost = data_row[14]
-        self.is_craftable = CraftRecipe.get_craftability(self.recipe)
+        self.ingredients = CraftRecipe.extract_ingredients(data_row)
+        self.coin_cost = data_row[14]
+        self.is_craftable = CraftRecipe.get_craftability(self.ingredients)
         self.card = Card(data_row)
 
     @staticmethod
@@ -50,7 +32,7 @@ class CraftRecipe:
         )
 
     @staticmethod
-    def extract_recipe(data_row) -> tuple:
+    def extract_ingredients(data_row) -> tuple:
         return (
             data_row[6], # 石頭
             data_row[7], # 水
@@ -83,5 +65,5 @@ with open('recipes.csv', encoding="utf8") as f:
         else:
             craft = CraftRecipe(row)
             if craft.is_craftable:
-                craft_recipes[craft.recipe] = craft
+                craft_recipes[craft.ingredients] = craft
 print(craft_recipes)
