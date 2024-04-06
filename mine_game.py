@@ -4,6 +4,8 @@ from random import randint, uniform
 from game_assets import tile_images, pickaxe_image, card_images
 from game_data import UserInventory, ResourceType
 from scene_convert import get_child_scene_position
+from card_composer import compose_card_surface
+from recipe import primitive_cards
 
 class MiningStatus(Enum):
     Hiden = 0
@@ -19,8 +21,6 @@ CARD_FRAME_DELAY = 30
 
 RESOURCE_CELL_RATE = 0.6
 RESOURCE_LEVEL_RANGE = (0.9, 0.7, 0)
-
-
 class MineMapCell:
     def __init__(self, cell_index: int) -> None:
         self.recource_level = 0
@@ -109,10 +109,27 @@ class MineGameManager:
     def blit_card(self, mine_cell: MineMapCell):
         if mine_cell is None or mine_cell.resource_type == ResourceType.Nothing:
             return
-        idx = mine_cell.resource_type.value - 1
-        img = card_images[idx]
-        self.canvas.blit(img, (80, 0))
+        card = self.get_resource_card(mine_cell)
+        surface = compose_card_surface(card)
+        self.canvas.blit(surface, (80, 0))
         self.game_status = MiningStatus.WaitClick
+
+    def get_resource_card(self, mine_cell: MineMapCell) -> str:
+        resource_type = ""
+        if mine_cell.resource_type == ResourceType.Stone:
+            resource_type = "stone"
+        elif mine_cell.resource_type == ResourceType.Water:
+            resource_type = "water"
+        elif mine_cell.resource_type == ResourceType.Wood:
+            resource_type = "wood"
+        elif mine_cell.resource_type == ResourceType.Food:
+            resource_type = "food"
+        elif mine_cell.resource_type == ResourceType.Metal:
+            resource_type = "metal"
+        elif mine_cell.resource_type == ResourceType.Jewel:
+            resource_type = "jewel"
+        card_id = f"{resource_type}_{mine_cell.recource_level}_1"
+        return primitive_cards[card_id]
 
     def process_frame(self, events: list) -> pygame.Surface:
         if self.game_status == MiningStatus.Hiden:

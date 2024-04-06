@@ -57,7 +57,10 @@ class CraftRecipe:
 # key: 合成配方 (石頭, 水, 木材, 食物, 金屬, 珠寶, 物品1 ID, 物品2 ID)
 # value: 合成出來的資源/物品 ID
 craft_recipes: dict[tuple, CraftRecipe] = {}
+primitive_cards: dict[str, Card] = {}
 for row in recipe_csv:
     craft = CraftRecipe(row)
     if craft.is_craftable:
         craft_recipes[craft.ingredients] = craft
+    else:
+        primitive_cards[craft.card.id] = craft.card
