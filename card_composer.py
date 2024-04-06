@@ -7,7 +7,7 @@ from sprite import GameSprite
 
 CARD_WIDTH = 265
 CARD_HEIGHT = 370
-TEXT_LINE_MARGIN = 3
+GLOBAL_MARGIN = 3
 CARD_RECTS = {
     "resource": {
         "name": Rect(45, 18, 180, 25),
@@ -90,20 +90,27 @@ def get_folded_text_lines(font: Font, text: str, rect_width: int) -> list[str]:
 
 def render_text(font: Font, text: str, rect: Rect, canvas: Surface, align_center:bool = True) -> None:
     text_lines = get_folded_text_lines(font, text, rect[2])
-    line_height = font.size(text)[1] + TEXT_LINE_MARGIN
+    line_height = font.size(text)[1] + GLOBAL_MARGIN
     for i in range(len(text_lines)):
         line = text_lines[i]
         line_surface = font.render(line, True, (0, 0, 0))
-        x = get_text_coord_x(line_surface, rect, align_center)
+        x = get_x_after_align(line_surface, rect, align_center)
         y = rect[1] + i * line_height
         canvas.blit(line_surface, (x, y))
 
-def get_text_coord_x(text_surface: Surface, rect: Rect, align_center: bool) -> int:
+def get_x_after_align(text_surface: Surface, rect: Rect, align_center: bool) -> int:
     if not align_center:
-        return rect[0] + TEXT_LINE_MARGIN
+        return rect[0] + GLOBAL_MARGIN
     if text_surface.get_size()[0] >= rect[2]:
-        return rect[0] + TEXT_LINE_MARGIN
+        return rect[0] + GLOBAL_MARGIN
     return rect.center[0] - text_surface.get_width() // 2
+
+def get_y_after_align(text_surface: Surface, rect: Rect, align_center: bool) -> int:
+    if not align_center:
+        return rect[1] + GLOBAL_MARGIN
+    if text_surface.get_size()[1] >= rect[3]:
+        return rect[1] + GLOBAL_MARGIN
+    return rect.center[1] - text_surface.get_height() // 2
 
 def render_name(card: Card, canvas: Surface) -> GameSprite:
     rect = get_surface_rect(card.type, "name")
@@ -117,10 +124,19 @@ def render_description(card: Card, canvas: Surface) -> GameSprite:
     text_surface = render_text(font, card.description, rect, canvas)
     return GameSprite(text_surface, rect)
 
-def get_image_sprite(card: Card) -> GameSprite:
-    rect = get_surface_rect(card.type, "image")
+def get_image_sprite(card: Card, align_center = True) -> GameSprite:
+    place_rect = get_surface_rect(card.type, "image")
     image = card_images[card.id]
-    return GameSprite(image, rect)
+    sprite =  GameSprite(image, place_rect)
+    if not align_center:
+        return sprite
+    sprite.rect = Rect(
+        get_x_after_align(image, place_rect, True),
+        get_y_after_align(image, place_rect, True),
+        image.get_width(),
+        image.get_height()
+    )
+    return sprite
 
 def get_resource_icon_sprite(card: Card) -> GameSprite:
     rect = get_surface_rect(card.type, "resource_icon")
