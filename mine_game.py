@@ -1,8 +1,8 @@
 import pygame
 from enum import Enum
 from random import randint, uniform
-from game_assets import tile_images, pickaxe_image, card_images
-from game_data import UserInventory, ResourceType
+from game_assets import tile_images, pickaxe_image, button_images
+from game_data import Card, UserInventory, ResourceType
 from scene_convert import get_child_scene_position
 from card_composer import compose_card_surface
 from recipe import primitive_cards
@@ -10,7 +10,7 @@ from recipe import primitive_cards
 class MiningStatus(Enum):
     Hiden = 0
     Running = 1
-    WaitClick = 2
+    SellOrCollect = 2
 
 MINE_MAP_ROW_SIZE = 5
 MINE_MAP_COLUMN_SIZE = 6
@@ -21,6 +21,10 @@ CARD_FRAME_DELAY = 30
 
 RESOURCE_CELL_RATE = 0.6
 RESOURCE_LEVEL_RANGE = (0.9, 0.7, 0)
+
+SELL_BUTTON_RECT = pygame.Rect(5, 320, 75, 45)
+COLLECT_BUTTON_RECT = pygame.Rect(345, 320, 75, 45)
+
 class MineMapCell:
     def __init__(self, cell_index: int) -> None:
         self.recource_level = 0
@@ -57,9 +61,9 @@ class MineMapCell:
                 break
 
 class MineGameManager:
-    def __init__(self, rect: tuple, user_resources: UserInventory) -> None:
+    def __init__(self, rect: tuple, user_inventory: UserInventory) -> None:
         self.canvas_rect = rect
-        self.user_resource = user_resources
+        self.user_inventory = user_inventory
         self.game_status = MiningStatus.Running
         self.saved_status = MiningStatus.Hiden
         self.canvas = pygame.Surface(
@@ -70,6 +74,7 @@ class MineGameManager:
         self.mine_map = self.new_mine_map()
         self.font = pygame.font.SysFont('arial', 16)
         self.card_frame_delay = 0
+        self.revealed_cell: MineMapCell = None
 
     def new_mine_map(self) -> list[MineMapCell]:
         mine_map = []
@@ -99,7 +104,12 @@ class MineGameManager:
         if cell is None or cell.resource_type == ResourceType.Nothing:
           return
         idx = cell.resource_type.value - 1
-        self.user_resource.resources[idx] += 1
+        self.user_inventory.resources[idx] += 1
+
+    def add_coin_by_cell(self, cell: MineMapCell) -> None:
+        if cell is None or cell.resource_type == ResourceType.Nothing:
+          return
+        self.user_inventory.add_coins
 
     def blit_pickaxe(self) -> None:
         text = self.font.render(str(self.pickaxe_count), True, (0, 0, 0))
@@ -112,7 +122,6 @@ class MineGameManager:
         card = self.get_resource_card(mine_cell)
         surface = compose_card_surface(card)
         self.canvas.blit(surface, (80, 0))
-        self.game_status = MiningStatus.WaitClick
 
     def get_resource_card(self, mine_cell: MineMapCell) -> str:
         resource_type = ""
@@ -129,34 +138,81 @@ class MineGameManager:
         elif mine_cell.resource_type == ResourceType.Jewel:
             resource_type = "jewel"
         card_id = f"{resource_type}_{mine_cell.recource_level}_1"
+        print("debug")
+        if not card_id in primitive_cards:
+            card_id = "stone_1_1"
+        print("debug")
         return primitive_cards[card_id]
 
     def process_frame(self, events: list) -> pygame.Surface:
         if self.game_status == MiningStatus.Hiden:
             return None
-        if self.game_status == MiningStatus.WaitClick:
-            for e in events:
-                if e.type == pygame.MOUSEBUTTONUP:
-                    self.game_status = MiningStatus.Running
-            return self.canvas
-        if self.game_status == MiningStatus.Running:
+        for e in events:
+            if e.type == pygame.MOUSEBUTTONUP:
+                self.process_click()
+        if self.game_status == MiningStatus.SellOrCollect:
+            self.blit_card(self.revealed_cell)
+            self.blit_collect_sell_buttons()
+        else:
             self.canvas.fill((255, 255, 255))
             self.blit_mine_map()
             self.blit_pickaxe()
-            for e in events:
-                if e.type == pygame.MOUSEBUTTONUP:
-                    self.process_click()
-            return self.canvas
+        return self.canvas
     
     def process_click(self) -> None:
         global_position = pygame.mouse.get_pos()
-        child_scene_position = get_child_scene_position(global_position, self.canvas_rect)
-        revealed_cell = self.reveal_mine_cell(child_scene_position)
-        self.add_resource_by_cell(revealed_cell)
+        position = get_child_scene_position(global_position, self.canvas_rect)
+        if self.game_status == MiningStatus.Running:
+            self.process_minig_click(position)
+            if self.revealed_cell.resource_type != ResourceType.Nothing:
+                self.game_status = MiningStatus.SellOrCollect
+        elif self.game_status == MiningStatus.SellOrCollect:
+            done = self.process_collect_or_sell_click(position)
+            if done:
+                self.revealed_cell = None
+                self.game_status = MiningStatus.Running
+
+    def process_minig_click(self, child_scene_position) -> None:
+        self.revealed_cell = self.reveal_mine_cell(child_scene_position)
         if self.pickaxe_count <= 0:
             self.mine_map = self.new_mine_map()
             self.pickaxe_count = MAX_PICKAXE_COUNT
-        self.blit_card(revealed_cell) # TODO: move status changing out
+        if self.revealed_cell:
+            self.process_collect_or_sell_click(child_scene_position)
+
+    def process_collect_or_sell_click(self, child_scene_position) -> bool:
+        if SELL_BUTTON_RECT.collidepoint(child_scene_position):
+            self.add_coin_by_cell(self.revealed_cell)
+            return True
+        elif COLLECT_BUTTON_RECT.collidepoint(child_scene_position):
+            self.add_resource_by_cell(self.revealed_cell)
+            return True
+        return False
+
+    def add_coin_by_cell(self, mine_cell: MineMapCell) -> None:
+        card_id = self.get_card_id(mine_cell)
+        card = primitive_cards[card_id]
+        self.user_inventory.add_coins(card.sell_coin)
+
+    def get_card_id(self, mine_cell: MineMapCell) -> Card:
+        resource = ""
+        if mine_cell.resource_type == ResourceType.Stone:
+            resource = "stone"
+        if mine_cell.resource_type == ResourceType.Water:
+            resource = "water"
+        if mine_cell.resource_type == ResourceType.Wood:
+            resource = "wood"
+        if mine_cell.resource_type == ResourceType.Food:
+            resource = "food"
+        if mine_cell.resource_type == ResourceType.Metal:
+            resource = "metal"
+        if mine_cell.resource_type == ResourceType.Jewel:
+            resource = "jewel"
+        return f"{resource}_{mine_cell.recource_level}_1"
+
+    def blit_collect_sell_buttons(self) -> None:
+        self.canvas.blit(button_images["collect"], COLLECT_BUTTON_RECT.topleft)
+        self.canvas.blit(button_images["sell"], SELL_BUTTON_RECT.topleft)
     
     def hide(self) -> None:
         self.saved_status = self.game_status

@@ -36,6 +36,8 @@ button_images = {
     "left_arrow": load("img/left_arrow.png"),
     "right_arrow": load("img/right_arrow.png"),
     "confirm_craft": load("img/confirm_craft_button.png"),
+    "collect": load("img/collect_button.png"),
+    "sell": load("img/sell_button.png"),
 }
 
 card_teamplates = {
