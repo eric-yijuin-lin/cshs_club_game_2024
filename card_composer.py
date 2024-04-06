@@ -19,9 +19,9 @@ CARD_RECTS = {
         "coin_amount": Rect(145, 325, 50, 28),
     },
     "item": {
-        "name": Rect(36, 16, 188, 20),
+        "name": Rect(36, 12, 188, 25),
         "image": Rect(25, 55, 215, 145),
-        "description": Rect(20, 250, 235, 85),
+        "description": Rect(20, 250, 200, 85),
         "coin_icon": Rect(5, 342, 25, 25),
         "coin_amount": Rect(30, 350, 70, 17),
     }
@@ -36,7 +36,7 @@ small_font = Font('./msjh.ttf', 12)
 
 def get_template(card: Card) -> Surface:
     if card.type == CardType.Item:
-        level_key = "lv_" + card.level
+        level_key = "lv_" + str(card.level)
         return card_teamplates["item"][level_key]
     else:
         if card.type == CardType.Stone:
@@ -146,7 +146,7 @@ def render_coin_amount(card: Card, canvas: Surface) -> GameSprite:
     amount_surface = render_text(font, amount_text, rect, canvas)
     return GameSprite(amount_surface, rect)
 
-def compose_resource_card(card: Card) -> GameSprite:
+def compose_resource_card(card: Card) -> Surface:
     template = get_template(card)
     image_sprite = get_image_sprite(card)
     resource_icon= get_resource_icon_sprite(card)
@@ -160,43 +160,18 @@ def compose_resource_card(card: Card) -> GameSprite:
     render_description(card, template)
     return template
 
-def compose_item_card(card: Card) -> GameSprite:
+def compose_item_card(card: Card) -> Surface:
     template = get_template(card)
     image_sprite = get_image_sprite(card)
     coin_icon = get_coin_icon_sprite(card)
     template.blit(image_sprite.image, image_sprite.rect)
     template.blit(coin_icon.image, coin_icon.rect)
     render_name(card, template)
-    render_resource_amount(card, template)
     render_coin_amount(card, template)
     render_description(card, template)
     return template
 
-card = Card([
-    "wood_1_1",
-    "斷掉的球棒",
-    "木材",
-    1,1,10,0,0,0,0,0,0,"","",0,
-    "某兩間學校曲棍球友誼賽之後留下來的棍棒，最低階的木材來源"
-])
-test = compose_resource_card(card)
-
-main_scene = pygame.display.set_mode((420, 500))
-clock = pygame.time.Clock()
-running = True
-while running:
-    main_scene.fill((200, 200, 200))
-    main_scene.blit(test, (0, 0))
-
-    events = pygame.event.get()
-    for event in events:
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.MOUSEBUTTONUP:
-            pos = pygame.mouse.get_pos()
-
-    pygame.display.update()
-    clock.tick(40)
-
-# Quit Pygame
-pygame.quit()
+def compose_card_surface(card: Card) -> Surface:
+    if card.type == CardType.Item:
+        return compose_item_card(card)
+    return compose_resource_card(card)

@@ -2,11 +2,12 @@ from enum import Enum
 
 import pygame
 from pygame import Rect, Surface, font
-from game_assets import icon_images, button_images, craft_recipes, coin_image
-from game_data import GameItem, UserInventory
-from recipe import CraftRecipe
+from game_assets import icon_images, button_images, coin_image
+from game_data import CardType, GameItem, UserInventory
+from recipe import Card, CraftRecipe, craft_recipes
 from scene_convert import get_child_scene_position
 from sprite import GameSprite
+from card_composer import compose_card_surface
 
 row_rect_templates: dict[str, tuple] = {
     "container": (80, 5, 245, 40),
@@ -29,6 +30,10 @@ def get_shifted_rect(template: tuple, row_index: int) -> Rect:
         template[3]
     )
 
+class CraftStatus(Enum):
+    Hiden = 0
+    Running = 1
+    WaitClick = 2
 
 # need to refactor later, to synchronize ResourceType and MaterialType
 class IngredientType(Enum):
@@ -56,7 +61,7 @@ class CraftIngredient:
         if type == IngredientType.Item:
             self.set_available_items(user_inventory.items)
         else:
-            self.set_resources(user_inventory.recoures)
+            self.set_resources(user_inventory.resources)
 
     def set_resources(self, resources: list[int]) -> None:
         index = self.type.value - 1
@@ -165,7 +170,7 @@ class ConfirmCraftComponent:
 
     def init_sprites(self) -> None:   
         self.sprites["message_sprite"] = GameSprite(
-            self.cost_font.render("發現可合成配方！", True, (0, 0, 0)),
+            self.cost_font.render("發現配方！", True, (0, 0, 0)),
             Rect(50, 330, 150, 40)
         )
         self.sprites["coin_icon_sprite"] = GameSprite(
@@ -180,6 +185,9 @@ class ConfirmCraftComponent:
             button_images["confirm_craft"],
             Rect(300, 330, 30, 30)
         )
+
+    def update_message(self, message: str) -> None:
+        self.sprites["message_sprite"].image = self.cost_font.render(message, True, (0, 0, 0))
     
     def update_cost(self, amount: int) -> None:
         self.sprites["cost_amount_sprite"].image = self.cost_font.render(str(amount), True, (0, 0, 0))
@@ -199,6 +207,8 @@ class CraftManager:
         self.ingredients: tuple = None
         self.matched_recipe: CraftRecipe = None
         self.show_craft_component = False
+        self.craft_status = CraftStatus.Hiden
+        self.saved_status = CraftStatus.Running
         self.craft_component = ConfirmCraftComponent()
         self.refresh_material_rows()
 
@@ -220,16 +230,24 @@ class CraftManager:
             self.material_rows.append(row)
 
     def process_frame(self, events: list) -> Surface:
-        self.canvas.fill((255, 255, 255))
-        for row in self.material_rows:
-            self.blit_row(row)
-        if self.show_craft_component:
-            self.blit_craft_component()
-        for e in events:
-            if e.type == pygame.MOUSEBUTTONUP:
-                pos = pygame.mouse.get_pos()
-                self.process_click(pos)
-        return self.canvas
+        if self.craft_status == CraftStatus.Hiden:
+            return None
+        if self.craft_status == CraftStatus.WaitClick:
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONUP:
+                    self.craft_status = CraftStatus.Running
+            return self.canvas
+        if self.craft_status == CraftStatus.Running:
+            self.canvas.fill((255, 255, 255))
+            for row in self.material_rows:
+                self.blit_row(row)
+            if self.show_craft_component:
+                self.blit_craft_component()
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONUP:
+                    pos = pygame.mouse.get_pos()
+                    self.process_click(pos)
+            return self.canvas
 
     def blit_row(self, row: IngredientRowSprite) -> None:
         for sprite in row.child_sprites.values():
@@ -239,12 +257,18 @@ class CraftManager:
         for sprite in self.craft_component.sprites.values():
             self.canvas.blit(sprite.image, sprite.rect)
 
+    def blit_card(self, card: Card) -> None:
+        card_surface = compose_card_surface(card)
+        self.canvas.blit(card_surface, (80, 0))
+
     def process_click(self, global_position: tuple) -> None:
         position = get_child_scene_position(global_position, self.canvas_rect)
-        if self.show_craft_component:
-            if self.craft_component.is_craft_button_clicked(position):
-                self.process_craft_click()
-                return
+        if self.show_craft_component and self.craft_component.is_craft_button_clicked(position):
+            card = self.process_craft_click()
+            if card:
+                self.blit_card(card)
+                self.craft_status = CraftStatus.WaitClick
+            return
         row = self.get_clicked_row(position)
         if not row:
             return
@@ -278,32 +302,17 @@ class CraftManager:
         row.update_text_sprite()
         self.update_recipe()
 
-    def process_craft_click(self) -> None:
-        pass
-
-    def enough_ingredients(self) -> bool:
-        if not self.enough_resource():
-            return False
-        if not self.enough_items():
-            return False
-    
-    def enough_resource(self) -> bool:
-        resource_count = len(self.inventory.recoures)
-        for i in range(resource_count):
-            if self.ingredients[i] < self.inventory.recoures[i]:
-                return False
-
-    def enough_items(self) -> bool:
-        id_1 = self.ingredients[6]
-        id_2 = self.ingredients[7]
-        item_1 = next((i for i in self.inventory.items if i.id == id_1), None)
-        item_2 = next((i for i in self.inventory.items if i.id == id_2), None)
-        if item_1 is None or item_2 is None:
-            return False
-        if item_1.count < 1 or item_2.count < 1:
-            return False
-        if id_1 == id_2 and item_1.count < 2:
-            return False
+    def process_craft_click(self) -> Card:
+        if self.matched_recipe is None:
+            raise ValueError("no matched recipe")
+        if self.matched_recipe.coin_cost > self.inventory.coins:
+            self.craft_component.update_message("金幣不足！")
+            return None
+        if not self.inventory.enough_ingredients(self.ingredients):
+            self.craft_component.update_message("材料不足！")
+            return None
+        card = self.craft_card(self.inventory, self.matched_recipe)
+        return card
 
     def update_recipe(self) -> None:
         self.ingredients = self.get_selected_ingredients()
@@ -312,7 +321,7 @@ class CraftManager:
             if recipe.is_craftable:
                 print(f"recipe matched: {self.ingredients}")
                 self.matched_recipe = craft_recipes[self.ingredients]
-                self.craft_component.update_cost(self.matched_recipe.money_cost)
+                self.craft_component.update_cost(self.matched_recipe.coin_cost)
                 self.show_craft_component = True
         else:
             self.show_craft_component = False
@@ -326,3 +335,21 @@ class CraftManager:
             else:
                 ingredients.append(row.material.use_amount)
         return tuple(ingredients)
+
+    def craft_card(self, inventory: UserInventory, recipe: CraftRecipe) -> Card:
+        resources = recipe.ingredients[:6]
+        item_id_1 = recipe.ingredients[6]
+        item_id_2 = recipe.ingredients[7]
+        coins = recipe.coin_cost
+        inventory.consume_resources(resources)
+        inventory.consume_item(item_id_1)
+        inventory.consume_item(item_id_2)
+        inventory.consume_coins(coins)
+        return recipe.card
+
+    def hide(self) -> None:
+        self.saved_status = self.craft_status
+        self.craft_status = CraftStatus.Hiden
+
+    def activate(self) -> None:
+        self.craft_status = self.saved_status

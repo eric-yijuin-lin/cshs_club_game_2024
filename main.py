@@ -9,9 +9,9 @@ from game_data import UserInventory
 from sprite import GameSprite
 
 pygame.init()
-class GameStatus(Enum):
+class GameScenes(Enum):
     MiningGame = 1
-    Synthesize = 2
+    Craft = 2
     Ranking = 3
 
 CHILD_SCENE_RECT = (0, 70, 420, 370)
@@ -23,14 +23,14 @@ clock = pygame.time.Clock()
 
 user_inventory = UserInventory()
 mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_inventory)
-synth_manager = CraftManager(CHILD_SCENE_RECT, user_inventory)
+craft_manager = CraftManager(CHILD_SCENE_RECT, user_inventory)
 
 mine_button = GameSprite(button_images["mining_menu"], Rect(70, 455, 79, 35))
 synth_button = GameSprite(button_images["craft_menu"], Rect(160, 455, 79, 35))
 rank_button = GameSprite(button_images["rank_menu"], Rect(250, 455, 79, 35))
 
 fps = 40
-game_status = GameStatus.MiningGame
+activated_scene = GameScenes.MiningGame
 
 def draw_recource_icons():
     for i in range(len(user_inventory.resources)):
@@ -56,14 +56,18 @@ def draw_buttons() -> None:
     main_scene.blit(rank_button.image, rank_button.rect)
 
 def process_button_click(posision: tuple) -> None:
-    global game_status
+    global activated_scene
     if mine_button.is_clicked(posision):
-        game_status = GameStatus.MiningGame
+        craft_manager.hide()
+        mine_game_manager.activate()
+        activated_scene = GameScenes.MiningGame
     elif synth_button.is_clicked(posision):
-        synth_manager.refresh_material_rows()
-        game_status = GameStatus.Synthesize
+        mine_game_manager.hide()
+        craft_manager.activate()
+        craft_manager.refresh_material_rows()
+        activated_scene = GameScenes.Craft
     elif rank_button.is_clicked(posision):
-        game_status = GameStatus.Ranking
+        activated_scene = GameScenes.Ranking
 
 def blit_child_scene(scene: pygame.Surface) -> None:
     main_scene.blit(scene, (CHILD_SCENE_RECT[0], CHILD_SCENE_RECT[1]))
@@ -88,11 +92,11 @@ while running:
             pos = pygame.mouse.get_pos()
             process_button_click(pos)
             
-    if game_status == GameStatus.MiningGame:
+    if activated_scene == GameScenes.MiningGame:
         frame = mine_game_manager.process_frame(events)
         blit_child_scene(frame)
-    elif game_status == GameStatus.Synthesize:
-        frame = synth_manager.process_frame(events)
+    elif activated_scene == GameScenes.Craft:
+        frame = craft_manager.process_frame(events)
         blit_child_scene(frame)
 
 

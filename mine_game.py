@@ -147,4 +147,3 @@ class MineGameManager:
 
     def activate(self) -> None:
         self.game_status = self.saved_status
-        self.saved_status = MiningStatus.Hiden

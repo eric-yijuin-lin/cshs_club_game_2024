@@ -1,3 +1,4 @@
+import csv
 from pygame.image import load
 
 card_images = {
@@ -54,3 +55,20 @@ card_teamplates = {
         "lv_5": load("img/card_templates/item_lv_5.png"),
     }
 }
+
+
+# key: 合成配方 (石頭, 水, 木材, 食物, 金屬, 珠寶, 物品1 ID, 物品2 ID)
+# value: 合成出來的資源/物品 ID
+recipe_csv = []
+with open('recipes.csv', encoding="utf8") as f:
+    reader = csv.reader(f, delimiter=',')
+    column_num = 0
+    for row in reader:
+        if reader.line_num == 1:
+            # print("表頭欄位：", row)
+            pass
+        else:
+            recipe_csv.append(row)
+            card_id = row[0]
+            if not card_id in card_images:
+                card_images[card_id] = load(f"img/card_images/{card_id}.png")

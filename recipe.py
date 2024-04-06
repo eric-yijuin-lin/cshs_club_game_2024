@@ -1,5 +1,6 @@
 import csv
 
+from game_assets import recipe_csv
 from game_data import Card
 
 class CraftRecipe:
@@ -56,14 +57,7 @@ class CraftRecipe:
 # key: 合成配方 (石頭, 水, 木材, 食物, 金屬, 珠寶, 物品1 ID, 物品2 ID)
 # value: 合成出來的資源/物品 ID
 craft_recipes: dict[tuple, CraftRecipe] = {}
-with open('recipes.csv', encoding="utf8") as f:
-    reader = csv.reader(f, delimiter=',')
-    column_num = 0
-    for row in reader:
-        if reader.line_num == 1:
-            print("表頭欄位：", row)
-        else:
-            craft = CraftRecipe(row)
-            if craft.is_craftable:
-                craft_recipes[craft.ingredients] = craft
-print(craft_recipes)
+for row in recipe_csv:
+    craft = CraftRecipe(row)
+    if craft.is_craftable:
+        craft_recipes[craft.ingredients] = craft
