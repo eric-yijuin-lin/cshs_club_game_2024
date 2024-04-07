@@ -20,7 +20,7 @@ MAX_PICKAXE_COUNT = MINE_MAP_ROW_SIZE * MINE_MAP_COLUMN_SIZE // 2
 CARD_FRAME_DELAY = 30
 
 RESOURCE_CELL_RATE = 0.6
-RESOURCE_LEVEL_RANGE = (0.9, 0.7, 0)
+RESOURCE_LEVEL_PROBABLILITIES = (0.05, 0.1, 0.2, 0.3, 1)
 
 SELL_BUTTON_RECT = pygame.Rect(5, 320, 75, 45)
 COLLECT_BUTTON_RECT = pygame.Rect(345, 320, 75, 45)
@@ -53,10 +53,10 @@ class MineMapCell:
         self.roll_resource_level()
 
     def roll_resource_level(self) -> None:
-        max_level = len(RESOURCE_LEVEL_RANGE)
+        max_level = len(RESOURCE_LEVEL_PROBABLILITIES)
         rand = uniform(0, 1)
         for i in range(max_level):
-            if rand > RESOURCE_LEVEL_RANGE[i]:
+            if rand <= RESOURCE_LEVEL_PROBABLILITIES[i]:
                 self.recource_level = max_level - i
                 break
 
@@ -99,12 +99,6 @@ class MineGameManager:
                 # print(cell.recource_level)
                 return cell
         return None
-    
-    def add_resource_by_cell(self, cell: MineMapCell) -> None:
-        if cell is None or cell.resource_type == ResourceType.Nothing:
-          return
-        idx = cell.resource_type.value - 1
-        self.user_inventory.resources[idx] += 1
 
     def add_coin_by_cell(self, cell: MineMapCell) -> None:
         if cell is None or cell.resource_type == ResourceType.Nothing:
@@ -185,6 +179,12 @@ class MineGameManager:
             self.add_resource_by_cell(self.revealed_cell)
             return True
         return False
+
+    def add_resource_by_cell(self, cell: MineMapCell) -> None:
+        if cell is None or cell.resource_type == ResourceType.Nothing:
+          return
+        idx = cell.resource_type.value - 1
+        self.user_inventory.resources[idx] += cell.recource_level
 
     def add_coin_by_cell(self, mine_cell: MineMapCell) -> None:
         card_id = self.get_card_id(mine_cell)
