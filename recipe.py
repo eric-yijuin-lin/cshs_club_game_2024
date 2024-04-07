@@ -1,7 +1,7 @@
 import csv
 
 from game_assets import recipe_csv
-from game_data import Card
+from game_data import Card, CardType
 
 class CraftRecipe:
     def __init__(self, csv_row: list) -> None:
@@ -55,7 +55,7 @@ class CraftRecipe:
         return False
 
 # key: 合成配方 (石頭, 水, 木材, 食物, 金屬, 珠寶, 物品1 ID, 物品2 ID)
-# value: 合成出來的資源/物品 ID
+# value: 合成出來的資源/物品卡片
 craft_recipes: dict[tuple, CraftRecipe] = {}
 primitive_cards: dict[str, Card] = {}
 for row in recipe_csv:
@@ -64,3 +64,32 @@ for row in recipe_csv:
         craft_recipes[craft.ingredients] = craft
     else:
         primitive_cards[craft.card.id] = craft.card
+
+# 為避免 None Error，把還沒加入配方的高級資源加進 primitive_cards
+type_texts = {
+    CardType.Stone: "石頭",
+    CardType.Water: "水",
+    CardType.Wood: "木材",
+    CardType.Food: "食物",
+    CardType.Metal: "金屬",
+    CardType.Jewel: "珠寶",
+}
+for t_enum in CardType:
+    if t_enum == CardType.Item: 
+        continue
+    type_name = t_enum.name.lower()
+    for lv in range(1, 6):
+        card_id = f"{type_name}_{lv}_1"
+        if card_id not in primitive_cards:
+            card = Card([
+                card_id,
+                card_id,
+                type_texts[t_enum],
+                lv,
+                lv,
+                lv * 10,
+                0,0,0,0,0,0,"","",
+                0,
+                card_id
+            ])
+            primitive_cards[card_id] = card

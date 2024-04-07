@@ -1,4 +1,3 @@
-import pygame
 from pygame import Surface, Rect, font
 from pygame.font import Font
 from game_assets import card_teamplates, card_images, icon_images, coin_image
@@ -35,23 +34,28 @@ small_font = Font('./msjh.ttf', 12)
 # medium_font.bold = True
 
 def get_template(card: Card) -> Surface:
+    template: Surface = None
     if card.type == CardType.Item:
         level_key = "lv_" + str(card.level)
-        return card_teamplates["item"][level_key]
+        template = card_teamplates["item"][level_key]
     else:
         if card.type == CardType.Stone:
-            return card_teamplates["resource"]["stone"]
-        if card.type == CardType.Water:
-            return card_teamplates["resource"]["water"]
-        if card.type == CardType.Wood:
-            return card_teamplates["resource"]["wood"]
-        if card.type == CardType.Food:
-            return card_teamplates["resource"]["food"]
-        if card.type == CardType.Metal:
-            return card_teamplates["resource"]["metal"]
-        if card.type == CardType.Jewel:
-            return card_teamplates["resource"]["jewel"]
-        raise ValueError("failed to get card template: unsupported card type")
+            template = card_teamplates["resource"]["stone"]
+        elif card.type == CardType.Water:
+            template = card_teamplates["resource"]["water"]
+        elif card.type == CardType.Wood:
+            template = card_teamplates["resource"]["wood"]
+        elif card.type == CardType.Food:
+            template = card_teamplates["resource"]["food"]
+        elif card.type == CardType.Metal:
+            template = card_teamplates["resource"]["metal"]
+        elif card.type == CardType.Jewel:
+            template = card_teamplates["resource"]["jewel"]
+        else:
+            raise ValueError("failed to get card template: unsupported card type")
+        surface = Surface(template.get_size())
+        surface.blit(template, (0, 0))
+        return surface
     
 def get_surface_rect(card_type: CardType, region_key: str) -> Rect:
     if card_type == CardType.Item:
@@ -126,7 +130,10 @@ def render_description(card: Card, canvas: Surface) -> GameSprite:
 
 def get_image_sprite(card: Card, align_center = True) -> GameSprite:
     place_rect = get_surface_rect(card.type, "image")
-    image = card_images[card.id]
+    if card.id in card_images:
+        image = card_images[card.id]
+    else:
+        image = card_images["secret"]
     sprite =  GameSprite(image, place_rect)
     if not align_center:
         return sprite

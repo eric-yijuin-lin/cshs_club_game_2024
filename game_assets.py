@@ -8,6 +8,7 @@ card_images = {
     "food_1_1": load("img/card_images/food_1_1.png"),
     "metal_1_1": load("img/card_images/metal_1_1.png"),
     "jewel_1_1": load("img/card_images/jewel_1_1.png"),
+    "secret": load("img/card_images/secret.png"),
 }
 
 icon_images = [
@@ -66,11 +67,8 @@ with open('recipes.csv', encoding="utf8") as f:
     reader = csv.reader(f, delimiter=',')
     column_num = 0
     for row in reader:
-        if reader.line_num == 1:
-            # print("表頭欄位：", row)
-            pass
-        else:
+        if reader.line_num != 1:
             recipe_csv.append(row)
             card_id = row[0]
-            if not card_id in card_images:
+            if card_id not in card_images:
                 card_images[card_id] = load(f"img/card_images/{card_id}.png")

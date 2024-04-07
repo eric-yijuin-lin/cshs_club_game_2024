@@ -138,10 +138,6 @@ class MineGameManager:
         elif mine_cell.resource_type == ResourceType.Jewel:
             resource_type = "jewel"
         card_id = f"{resource_type}_{mine_cell.recource_level}_1"
-        print("debug")
-        if not card_id in primitive_cards:
-            card_id = "stone_1_1"
-        print("debug")
         return primitive_cards[card_id]
 
     def process_frame(self, events: list) -> pygame.Surface:
@@ -151,6 +147,7 @@ class MineGameManager:
             if e.type == pygame.MOUSEBUTTONUP:
                 self.process_click()
         if self.game_status == MiningStatus.SellOrCollect:
+            self.canvas.fill((255, 255, 255))
             self.blit_card(self.revealed_cell)
             self.blit_collect_sell_buttons()
         else:
@@ -164,7 +161,7 @@ class MineGameManager:
         position = get_child_scene_position(global_position, self.canvas_rect)
         if self.game_status == MiningStatus.Running:
             self.process_minig_click(position)
-            if self.revealed_cell.resource_type != ResourceType.Nothing:
+            if self.revealed_cell and self.revealed_cell.resource_type != ResourceType.Nothing:
                 self.game_status = MiningStatus.SellOrCollect
         elif self.game_status == MiningStatus.SellOrCollect:
             done = self.process_collect_or_sell_click(position)
