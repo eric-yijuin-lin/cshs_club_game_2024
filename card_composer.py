@@ -53,9 +53,9 @@ def get_template(card: Card) -> Surface:
             template = card_teamplates["resource"]["jewel"]
         else:
             raise ValueError("failed to get card template: unsupported card type")
-        surface = Surface(template.get_size())
-        surface.blit(template, (0, 0))
-        return surface
+    surface = Surface(template.get_size())
+    surface.blit(template, (0, 0))
+    return surface
     
 def get_surface_rect(card_type: CardType, region_key: str) -> Rect:
     if card_type == CardType.Item:

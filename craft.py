@@ -17,6 +17,9 @@ row_rect_templates: dict[str, tuple] = {
     "right_arrow": (300, 15, 25, 25),
 }
 
+SELL_BUTTON_RECT = pygame.Rect(5, 320, 75, 45)
+COLLECT_BUTTON_RECT = pygame.Rect(345, 320, 75, 45)
+
 font.init()
 mideum_font = font.Font('./msjh.ttf', 14)
 small_font = font.Font('./msjh.ttf', 10)
@@ -33,7 +36,7 @@ def get_shifted_rect(template: tuple, row_index: int) -> Rect:
 class CraftStatus(Enum):
     Hiden = 0
     Running = 1
-    WaitClick = 2
+    SellOrCollect = 2
 
 # need to refactor later, to synchronize ResourceType and MaterialType
 class IngredientType(Enum):
@@ -164,6 +167,7 @@ class IngredientRowSprite:
 
 class ConfirmCraftComponent:
     def __init__(self) -> None:
+        self.show = False
         self.cost_font = font.Font('./msjh.ttf', 16)
         self.sprites: dict[str, GameSprite] = {}
         self.init_sprites()
@@ -193,6 +197,8 @@ class ConfirmCraftComponent:
         self.sprites["cost_amount_sprite"].image = self.cost_font.render(str(amount), True, (0, 0, 0))
 
     def is_craft_button_clicked(self, child_scene_position: tuple) -> bool:
+        if not self.show:
+            return False
         return self.sprites["craft_button_sprite"].is_clicked(child_scene_position)
 
 class CraftManager:
@@ -206,6 +212,7 @@ class CraftManager:
         self.material_rows: list[IngredientRowSprite] = []
         self.ingredients: tuple = None
         self.matched_recipe: CraftRecipe = None
+        self.crafted_card: Card = None
         self.show_craft_component = False
         self.craft_status = CraftStatus.Hiden
         self.saved_status = CraftStatus.Running
@@ -232,22 +239,20 @@ class CraftManager:
     def process_frame(self, events: list) -> Surface:
         if self.craft_status == CraftStatus.Hiden:
             return None
-        if self.craft_status == CraftStatus.WaitClick:
-            for e in events:
-                if e.type == pygame.MOUSEBUTTONUP:
-                    self.craft_status = CraftStatus.Running
-            return self.canvas
-        if self.craft_status == CraftStatus.Running:
-            self.canvas.fill((255, 255, 255))
-            for row in self.material_rows:
-                self.blit_row(row)
-            if self.show_craft_component:
-                self.blit_craft_component()
-            for e in events:
+        for e in events:
                 if e.type == pygame.MOUSEBUTTONUP:
                     pos = pygame.mouse.get_pos()
                     self.process_click(pos)
-            return self.canvas
+        self.canvas.fill((255, 255, 255))
+        if self.craft_status == CraftStatus.Running:
+            for row in self.material_rows:
+                self.blit_row(row)
+            if self.craft_component.show:
+                self.blit_craft_component()
+        elif self.craft_status == CraftStatus.SellOrCollect:
+            self.blit_card(self.crafted_card)
+            self.blit_collect_sell_buttons()
+        return self.canvas
 
     def blit_row(self, row: IngredientRowSprite) -> None:
         for sprite in row.child_sprites.values():
@@ -263,19 +268,28 @@ class CraftManager:
 
     def process_click(self, global_position: tuple) -> None:
         position = get_child_scene_position(global_position, self.canvas_rect)
-        if self.show_craft_component and self.craft_component.is_craft_button_clicked(position):
-            card = self.process_craft_click()
-            if card:
-                self.blit_card(card)
-                self.craft_status = CraftStatus.WaitClick
-            return
-        row = self.get_clicked_row(position)
-        if not row:
-            return
-        if row.is_left_arrow_clicked(position):
-            self.process_arrow_click(row, "left")
-        elif row.is_right_arrow_clicked(position):
-            self.process_arrow_click(row, "right")
+        if self.craft_status == CraftStatus.Running:
+            row = self.get_clicked_row(position)
+            if row:
+                if row.is_left_arrow_clicked(position):
+                    self.process_arrow_click(row, "left")
+                    row.update_text_sprite()
+                    self.update_recipe()
+                elif row.is_right_arrow_clicked(position):
+                    self.process_arrow_click(row, "right")
+                    row.update_text_sprite()
+                    self.update_recipe()
+            elif self.craft_component.is_craft_button_clicked(position):
+                crafted_card = self.process_craft_click()
+                if crafted_card:
+                    self.crafted_card = crafted_card
+                    self.craft_status = CraftStatus.SellOrCollect
+        elif self.craft_status == CraftStatus.SellOrCollect:
+            done = self.process_collect_or_sell_click(position)
+            if done:
+                self.crafted_card = None
+                self.refresh_material_rows()
+                self.craft_status = CraftStatus.Running
 
     def get_clicked_row(self, child_scene_position: tuple) -> IngredientRowSprite:
         for row in self.material_rows:
@@ -299,8 +313,6 @@ class CraftManager:
                 row.material.change_amount(1)
         else:
             raise ValueError("unsupported arrow click")
-        row.update_text_sprite()
-        self.update_recipe()
 
     def process_craft_click(self) -> Card:
         if self.matched_recipe is None:
@@ -311,8 +323,19 @@ class CraftManager:
         if not self.inventory.enough_ingredients(self.ingredients):
             self.craft_component.update_message("材料不足！")
             return None
-        card = self.craft_card(self.inventory, self.matched_recipe)
+        card = self.do_craft(self.inventory, self.matched_recipe)
         return card
+    
+    def process_collect_or_sell_click(self, child_scene_position) -> bool:
+        if SELL_BUTTON_RECT.collidepoint(child_scene_position):
+            coin_amount = self.crafted_card.sell_coin
+            self.inventory.add_coins(coin_amount)
+            return True
+        elif COLLECT_BUTTON_RECT.collidepoint(child_scene_position):
+            item = GameItem(self.crafted_card.id, self.crafted_card.name, self.crafted_card.level)
+            self.inventory.add_item(item)
+            return True
+        return False
 
     def update_recipe(self) -> None:
         self.ingredients = self.get_selected_ingredients()
@@ -322,9 +345,9 @@ class CraftManager:
                 print(f"recipe matched: {self.ingredients}")
                 self.matched_recipe = craft_recipes[self.ingredients]
                 self.craft_component.update_cost(self.matched_recipe.coin_cost)
-                self.show_craft_component = True
+                self.craft_component.show = True
         else:
-            self.show_craft_component = False
+            self.craft_component.show = False
             self.matched_recipe = None
     
     def get_selected_ingredients(self) -> tuple:
@@ -336,7 +359,7 @@ class CraftManager:
                 ingredients.append(row.material.use_amount)
         return tuple(ingredients)
 
-    def craft_card(self, inventory: UserInventory, recipe: CraftRecipe) -> Card:
+    def do_craft(self, inventory: UserInventory, recipe: CraftRecipe) -> Card:
         resources = recipe.ingredients[:6]
         item_id_1 = recipe.ingredients[6]
         item_id_2 = recipe.ingredients[7]
@@ -346,6 +369,10 @@ class CraftManager:
         inventory.consume_item(item_id_2)
         inventory.consume_coins(coins)
         return recipe.card
+    
+    def blit_collect_sell_buttons(self) -> None:
+        self.canvas.blit(button_images["collect"], COLLECT_BUTTON_RECT.topleft)
+        self.canvas.blit(button_images["sell"], SELL_BUTTON_RECT.topleft)
 
     def hide(self) -> None:
         self.saved_status = self.craft_status
