@@ -2,12 +2,12 @@ from enum import Enum
 
 import pygame
 from pygame import Rect, Surface, font
-from game_assets import icon_images, button_images, coin_image
-from game_data import CardType, GameItem, UserInventory
-from recipe import Card, CraftRecipe, craft_recipes
-from scene_convert import get_child_scene_position
-from sprite import GameSprite
-from card_composer import compose_card_surface
+from assets.game_assets import icon_images, button_images, coin_image
+from common.game_data import CardType, GameItem, UserInventory
+from craft_game.recipe import Card, CraftRecipe, craft_recipes
+from common.scene_convert import get_child_scene_position
+from common.sprite import GameSprite
+from common.card_composer import compose_card_surface
 
 row_rect_templates: dict[str, tuple] = {
     "container": (80, 5, 245, 40),
@@ -21,8 +21,8 @@ SELL_BUTTON_RECT = pygame.Rect(5, 320, 75, 45)
 COLLECT_BUTTON_RECT = pygame.Rect(345, 320, 75, 45)
 
 font.init()
-mideum_font = font.Font('./msjh.ttf', 14)
-small_font = font.Font('./msjh.ttf', 10)
+mideum_font = font.Font('assets/msjh.ttf', 14)
+small_font = font.Font('assets/msjh.ttf', 10)
 
 def get_shifted_rect(template: tuple, row_index: int) -> Rect:
     row_height = row_rect_templates["container"][3]
@@ -168,7 +168,7 @@ class IngredientRowSprite:
 class ConfirmCraftComponent:
     def __init__(self) -> None:
         self.show = False
-        self.cost_font = font.Font('./msjh.ttf', 16)
+        self.cost_font = font.Font('assets/msjh.ttf', 16)
         self.sprites: dict[str, GameSprite] = {}
         self.init_sprites()
 

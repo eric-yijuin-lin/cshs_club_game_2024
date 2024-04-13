@@ -1,7 +1,7 @@
 import csv
 
-from game_assets import recipe_csv
-from game_data import Card, CardType
+from assets.game_assets import recipe_csv
+from common.game_data import Card, CardType
 
 class CraftRecipe:
     def __init__(self, csv_row: list) -> None:

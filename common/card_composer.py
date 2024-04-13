@@ -1,8 +1,8 @@
 from pygame import Surface, Rect, font
 from pygame.font import Font
-from game_assets import card_teamplates, card_images, icon_images, coin_image
-from game_data import CardType, Card
-from sprite import GameSprite
+from assets.game_assets import card_teamplates, card_images, icon_images, coin_image
+from common.game_data import CardType, Card
+from common.sprite import GameSprite
 
 CARD_WIDTH = 265
 CARD_HEIGHT = 370
@@ -27,9 +27,9 @@ CARD_RECTS = {
 }
 
 font.init()
-large_font = Font('./msjh.ttf', 18)
-medium_font = Font('./msjh.ttf', 14)
-small_font = Font('./msjh.ttf', 12)
+large_font = Font('assets/msjh.ttf', 18)
+medium_font = Font('assets/msjh.ttf', 14)
+small_font = Font('assets/msjh.ttf', 12)
 # large_font.bold = True
 # medium_font.bold = True
 
