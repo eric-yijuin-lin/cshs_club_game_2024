@@ -2,9 +2,6 @@ import csv
 from pygame.image import load
 import os
 
-print("DEBUG", os.getcwd())
-print("DEBUG", os.path.exists("assets/img/card_images/stone_1_1.png"))
-
 card_images = {
     "stone_1_1": load("assets/img/card_images/stone_1_1.png"),
     "water_1_1": load("assets/img/card_images/water_1_1.png"),
