@@ -9,6 +9,10 @@ from craft_game.recipe import Card, CraftRecipe, craft_recipes
 from common.scene_convert import get_child_scene_position
 from common.card_composer import compose_card_surface
 from assets.game_assets import button_images
+from database.manager import GoogleSheetDatabase
+
+sheet_crediential = "./database/sheet-api-credential.json"
+user_id = "ae2285392767a655cba42b5a84512560"
 
 
 SELL_BUTTON_RECT = pygame.Rect(5, 320, 75, 45)
@@ -35,6 +39,7 @@ class CraftManager:
         self.craft_status = CraftStatus.Hiden
         self.saved_status = CraftStatus.Running
         self.craft_component = ConfirmCraftComponent()
+        self.db = GoogleSheetDatabase(sheet_crediential, user_id)
         self.refresh_material_rows()
 
     def refresh_material_rows(self) -> None:
@@ -101,6 +106,7 @@ class CraftManager:
                 crafted_card = self.process_craft_click()
                 if crafted_card:
                     self.crafted_card = crafted_card
+                    self.db.insert_craft_record(crafted_card)
                     self.craft_status = CraftStatus.SellOrCollect
         elif self.craft_status == CraftStatus.SellOrCollect:
             done = self.process_collect_or_sell_click(position)
