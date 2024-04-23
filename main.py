@@ -4,7 +4,7 @@ from pygame import Rect
 from mine_game.manager import MineGameManager
 from craft_game.manager import CraftManager
 from assets.game_assets import *
-from common.game_data import UserInventory
+from common.inventory import UserInventory
 from common.sprite import GameSprite
 
 pygame.init()

@@ -1,7 +1,8 @@
 from enum import Enum
 from pygame import Rect, Surface, font
 
-from common.game_data import GameItem, UserInventory
+from common.game_data import GameItem
+from common.inventory import UserInventory
 from common.sprite import GameSprite
 from assets.game_assets import icon_images, button_images
 

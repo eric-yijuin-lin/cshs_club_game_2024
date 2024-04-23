@@ -2,7 +2,8 @@ import pygame
 from enum import Enum
 from random import randint, uniform
 from assets.game_assets import tile_images, pickaxe_image, button_images
-from common.game_data import Card, UserInventory, ResourceType
+from common.game_data import Card, ResourceType
+from common.inventory import UserInventory
 from common.scene_convert import get_child_scene_position
 from common.card_composer import compose_card_surface
 from craft_game.recipe import primitive_cards

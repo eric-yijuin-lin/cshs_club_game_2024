@@ -2,7 +2,8 @@ from enum import Enum
 
 import pygame
 from pygame import Surface
-from common.game_data import GameItem, UserInventory
+from common.game_data import GameItem
+from common.inventory import UserInventory
 from craft_game.comfirm_component import ConfirmCraftComponent
 from craft_game.ingredient import IngredientRowSprite, IngredientType
 from craft_game.recipe import Card, CraftRecipe, craft_recipes
