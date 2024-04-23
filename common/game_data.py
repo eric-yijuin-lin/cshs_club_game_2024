@@ -122,11 +122,10 @@ class UserInventory:
         return True
 
     def enough_items(self, ingredients: tuple) -> bool:
-        needed_items = self.get_needed_item_counts(ingredients)
-        for needed_item in needed_items:
-            need_id = needed_item[0]
-            need_count = needed_item[1]
-            item = next((i for i in self.items if i.id == need_id), None)
+        item_count_dict = self.get_needed_item_counts(ingredients)
+        for item_id in item_count_dict:
+            need_count = item_count_dict[item_id]
+            item = next((i for i in self.items if i.id == item_id), None)
             if item is None or item.count < need_count:
                 return False
         return True

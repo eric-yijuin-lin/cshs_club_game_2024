@@ -1,6 +1,5 @@
 import csv
 from pygame.image import load
-import os
 
 card_images = {
     "stone_1_1": load("assets/img/card_images/stone_1_1.png"),
