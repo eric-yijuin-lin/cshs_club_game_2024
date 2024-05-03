@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import gspread
 import pymysql
-from common.game_data import Card
+from common.game_data import Card, GameItem
 
 class IDatabaseManager:
     def __init__(self) -> None:
@@ -100,6 +100,35 @@ class MySQLDatabase(IDatabaseManager):
             print("Failed to insert item: ", ex)
             if self.__connection:
                 self.__connection.close()
+
+    def get_group_items(self) -> list[GameItem]:
+        sql = """
+            SELECT
+                 `user_id`, `user_name`, `item_id`, `item_name`, `group_name`, `used`
+            FROM
+                `cshs_db`.`user_items`
+            WHERE
+                `group_name`=%s
+            ORDER BY
+                `created_at`
+        """
+        self.__check_connection()
+        cursor = self.__connection.cursor()
+        db_rows = []
+        group_items = []
+        with cursor:
+            params = (
+                self.__user_info["組別"]
+            )
+            cursor.execute(sql, params)
+            db_rows = cursor.fetchall()
+        for row in db_rows:
+            item_id = row[2]
+            item_name = row[3]
+            item_lv = int(item_id[5])
+            item = GameItem(item_id, item_name, item_lv, self.__user_info["USER_ID"])
+            group_items.append(item)
+        return group_items
 
     def test(self) -> None:
         sql = """
