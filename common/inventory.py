@@ -1,9 +1,9 @@
 
 from common.game_data import GameItem, ResourceType
 
-
 class UserInventory:
-    def __init__(self):
+    def __init__(self, user_id: str):
+        self.user_id = user_id
         self.resources = [0] * 6 # [stone, water, wood, food, metal, jewel]
         self.coins = 0
         self.items: list[GameItem] = []
@@ -13,8 +13,8 @@ class UserInventory:
 
     def init_user_items(self) -> None:
         self.items = [
-            GameItem("", "", 0),
-            GameItem("debug_1", "綠色乖乖", 99)
+            GameItem("", "", 0, ""),
+            GameItem("debug_1", "綠色乖乖", 99, "")
         ]
         self.item_count = len(self.items)
 
@@ -33,19 +33,23 @@ class UserInventory:
             return self.resources[5]
     
     def add_item(self, item: GameItem) -> None:
-        item_found = next((i for i in self.items if i.id == item.id), None)
+        item_found = next((i for i in self.items if i.item_id == item.item_id), None)
         if item_found:
             item_found.count += 1
         else:
             self.items.append(item)
             self.item_count = len(self.items)
 
+    def refresh_item_list(self, items: list[GameItem]) -> None:
+        for item in items:
+            self.add_item(item)
+
     def consume_resources(self, resources: tuple[int]) -> None:
         for i in range(len(self.resources)):
             self.resources[i] -= resources[i]
 
     def consume_item(self, item_id: str) -> None:
-        item = next((i for i in self.items if i.id == item_id))
+        item = next((i for i in self.items if i.item_id == item_id))
         item.count -= 1
 
     def add_coins(self, amount: int) -> None:
@@ -74,7 +78,7 @@ class UserInventory:
         item_count_dict = self.get_needed_item_counts(ingredients)
         for item_id in item_count_dict:
             need_count = item_count_dict[item_id]
-            item = next((i for i in self.items if i.id == item_id), None)
+            item = next((i for i in self.items if i.item_id == item_id), None)
             if item is None or item.count < need_count:
                 return False
         return True
@@ -91,14 +95,3 @@ class UserInventory:
             else:
                 item_counts[id_2] = 1
         return item_counts
-
-class GroupInventory:
-    def __init__(self) -> None:
-        self.__inventory: dict[str, dict] = None
-
-    def add_item(self, group_id: str, item_id) -> None:
-        if not group_id in self.__inventory:
-            self.__inventory[group_id] = {}
-            self.__inventory[group_id][item_id] = 1
-        else:
-            self.__inventory[group_id][item_id] += 1

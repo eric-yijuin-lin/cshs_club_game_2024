@@ -20,7 +20,8 @@ main_scene = pygame.display.set_mode((420, 500))
 font = pygame.font.SysFont('arial', 16)
 clock = pygame.time.Clock()
 
-user_inventory = UserInventory()
+user_id = "ae2285392767a655cba42b5a84512560"
+user_inventory = UserInventory(user_id)
 mine_game_manager = MineGameManager(CHILD_SCENE_RECT, user_inventory)
 craft_manager = CraftManager(CHILD_SCENE_RECT, user_inventory)
 

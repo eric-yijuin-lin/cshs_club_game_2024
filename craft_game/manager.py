@@ -109,7 +109,6 @@ class CraftManager:
                 crafted_card = self.process_craft_click()
                 if crafted_card:
                     self.crafted_card = crafted_card
-                    self.mysql_db.insert_user_item(crafted_card.id, crafted_card.name)
                     self.craft_status = CraftStatus.SellOrCollect
         elif self.craft_status == CraftStatus.SellOrCollect:
             done = self.process_collect_or_sell_click(position)
@@ -159,8 +158,10 @@ class CraftManager:
             self.inventory.add_coins(coin_amount)
             return True
         elif COLLECT_BUTTON_RECT.collidepoint(child_scene_position):
-            item = GameItem(self.crafted_card.id, self.crafted_card.name, self.crafted_card.level)
-            self.inventory.add_item(item)
+            item = GameItem(self.crafted_card.id, self.crafted_card.name, self.crafted_card.level, self.inventory.user_id)
+            self.mysql_db.insert_user_item(item.item_id, item.name)
+            group_items = self.mysql_db.get_group_items()
+            self.inventory.refresh_item_list(group_items)
             return True
         return False
 
@@ -181,7 +182,7 @@ class CraftManager:
         ingredients = []
         for row in self.material_rows:
             if row.material.type == IngredientType.Item:
-                ingredients.append(row.material.selected_item_1.id)
+                ingredients.append(row.material.selected_item_1.item_id)
             else:
                 ingredients.append(row.material.use_amount)
         return tuple(ingredients)

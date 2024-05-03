@@ -47,8 +47,9 @@ class Card:
         raise ValueError("invalid type string")
 
 class GameItem:
-    def __init__(self, id: str, name: str, level: int) -> None:
-        self.id = id
+    def __init__(self, item_id: str, name: str, level: int, user_id: str) -> None:
+        self.item_id = item_id
         self.name = name
         self.level = level
         self.count = 1
+        self.owner_id = user_id

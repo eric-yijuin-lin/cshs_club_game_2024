@@ -48,8 +48,8 @@ class CraftIngredient:
         self.available_items: list[GameItem] = []
         self.item_count = 0
         self.item_index = 0
-        self.selected_item_1 = GameItem("", "", 0)
-        self.selected_item_2 = GameItem("", "", 0)
+        self.selected_item_1 = GameItem("", "", 0, "")
+        self.selected_item_2 = GameItem("", "", 0, "")
         if type == IngredientType.Item:
             self.set_available_items(user_inventory.items)
         else:
