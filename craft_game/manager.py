@@ -10,11 +10,11 @@ from craft_game.recipe import Card, CraftRecipe, craft_recipes
 from common.scene_convert import get_child_scene_position
 from common.card_composer import compose_card_surface
 from assets.game_assets import button_images
-from database.manager import GoogleSheetDatabase
+from database.manager import GoogleSheetDatabase, MySQLDatabase
+
 
 sheet_crediential = "./database/sheet-api-credential.json"
-user_id = "ae2285392767a655cba42b5a84512560"
-
+mysql_credential = "./database/mysql-credential.json"
 
 SELL_BUTTON_RECT = pygame.Rect(5, 320, 75, 45)
 COLLECT_BUTTON_RECT = pygame.Rect(345, 320, 75, 45)
@@ -40,7 +40,9 @@ class CraftManager:
         self.craft_status = CraftStatus.Hiden
         self.saved_status = CraftStatus.Running
         self.craft_component = ConfirmCraftComponent()
-        self.db = GoogleSheetDatabase(sheet_crediential, user_id)
+        self.google_sheet_db = GoogleSheetDatabase(sheet_crediential, inventory.user_id)
+        self.mysql_db = MySQLDatabase(mysql_credential, self.google_sheet_db.user_info)
+
         self.refresh_material_rows()
 
     def refresh_material_rows(self) -> None:
@@ -107,7 +109,7 @@ class CraftManager:
                 crafted_card = self.process_craft_click()
                 if crafted_card:
                     self.crafted_card = crafted_card
-                    self.db.insert_craft_record(crafted_card)
+                    self.mysql_db.insert_user_item(crafted_card.id, crafted_card.name)
                     self.craft_status = CraftStatus.SellOrCollect
         elif self.craft_status == CraftStatus.SellOrCollect:
             done = self.process_collect_or_sell_click(position)
