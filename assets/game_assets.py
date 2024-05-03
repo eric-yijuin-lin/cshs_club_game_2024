@@ -71,4 +71,7 @@ with open('assets/recipes.csv', encoding="utf8") as f:
             recipe_csv.append(row)
             card_id = row[0]
             if card_id not in card_images:
-                card_images[card_id] = load(f"assets/img/card_images/{card_id}.png")
+                try:
+                    card_images[card_id] = load(f"assets/img/card_images/{card_id}.png")
+                except FileNotFoundError:
+                    card_images[card_id] = load(f"assets/img/card_images/secret.png")
